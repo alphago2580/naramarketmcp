@@ -1,0 +1,35 @@
+# In-package ignore (module specific)
+# Defer to repo root .gitignore; add module-specific artifacts here.
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual env (if created locally here)
+.venv/
+
+# Local env files
+.env
+.env.*
+
+# Build / dist
+build/
+dist/
+*.egg-info/
+
+# Data outputs (crawler)
+*.csv
+*.ndjson
+*.parquet
+*.json
+!README.md
+!pyproject.toml
+# Allow sample fixtures directory if added later
+!tests/
+
+# Logs
+*.log
+
+# Backup files
+backup/
+
