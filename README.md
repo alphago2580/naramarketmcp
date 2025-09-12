@@ -153,10 +153,75 @@ naramarket_server/
 - pytest + 샘플 응답 fixture
 - OpenAPI/JSON schema 자동 생성
 
+## 🚀 Smithery.ai Deployment
+
+This project is fully configured for deployment to [smithery.ai](https://smithery.ai), a cloud platform for MCP servers.
+
+### Quick Deploy
+
+1. **Install Smithery CLI** (already done):
+   ```bash
+   npm install -g @smithery/cli
+   ```
+
+2. **Set up your secrets**:
+   - Get your Nara Market API key from [data.go.kr](https://www.data.go.kr/)
+   - In smithery.ai dashboard, set the secret: `NARAMARKET_SERVICE_KEY`
+
+3. **Deploy**:
+   ```bash
+   cd naramarketmcp
+   ./deploy.sh
+   # Or manually: smithery deploy
+   ```
+
+### Smithery Configuration
+
+The project includes:
+- ✅ `smithery.yaml` - Main deployment configuration
+- ✅ `Dockerfile` - Optimized for smithery.ai with proper PORT handling
+- ✅ `.env.example` - Environment template
+- ✅ `deploy.sh` - Automated deployment script
+
+### Key Features for Smithery Deployment
+
+- **HTTP Transport**: Configured for smithery.ai's HTTP-based MCP protocol
+- **Dynamic Port**: Uses `PORT` environment variable set by smithery.ai
+- **Health Checks**: `/mcp` endpoint for monitoring
+- **Secrets Management**: Environment-based API key configuration
+- **Container Optimized**: Multi-stage Docker build for production
+- **Auto-scaling**: Configured for 1-10 instances based on load
+
+### Environment Variables (Smithery.ai)
+
+Required secrets to set in smithery.ai dashboard:
+- `NARAMARKET_SERVICE_KEY` - Your Nara Market API service key
+
+Auto-configured by smithery.ai:
+- `PORT` - Server port (automatically set)
+- `FASTMCP_TRANSPORT=http` - HTTP transport mode
+- `FASTMCP_HOST=0.0.0.0` - Listen on all interfaces
+
+### MCP Endpoints
+
+Once deployed, your server will be available at:
+- `GET /mcp` - Health check and server info
+- `POST /mcp` - MCP tool calls
+- `DELETE /mcp` - Reset/cleanup operations
+
+### Monitoring
+
+The smithery.ai dashboard provides:
+- Real-time logs and metrics
+- Performance monitoring
+- Error tracking
+- Usage analytics
+
 ---
 
 ## Change Log (요약)
 - 0.1.0: 초기 경량 릴리즈, window 기반 crawl_to_csv + partial/append 지원
+- 0.1.1: Smithery.ai deployment support added
 
 ---
 

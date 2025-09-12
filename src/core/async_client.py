@@ -134,6 +134,34 @@ class AsyncNaramarketClient:
         tasks = [self.call_detail_api(payload) for payload in payloads]
         return await asyncio.gather(*tasks, return_exceptions=True)
     
+    async def stream_list_api(self, params: Dict[str, Any]):
+        """
+        list API를 호출하고 응답을 청크(chunk) 단위로 스트리밍합니다.
+        메모리에 담기 어려운 대용량 응답을 처리하는 데 적합합니다.
+        """
+        if not self.session:
+            raise RuntimeError("클라이언트 세션이 초기화되지 않았습니다. async with 구문을 사용하세요.")
+
+        api_params = {
+            "serviceKey": self.service_key,
+            "numOfRows": params.get("numOfRows", 100),
+            "pageNo": params.get("pageNo", 1),
+            **params
+        }
+
+        logger.debug(f"스트리밍 (async list API) 파라미터: {api_params}")
+
+        async with self.semaphore:
+            try:
+                async with self.session.get(BASE_LIST_URL, params=api_params) as response:
+                    response.raise_for_status()
+                    # 응답 콘텐츠의 청크를 순회하며 반환(yield)합니다.
+                    async for chunk in response.content.iter_chunked(8192):
+                        yield chunk
+            except aiohttp.ClientError as e:
+                logger.error(f"API 스트림 중 에러 발생: {e}")
+                raise # 예외를 다시 발생시켜 호출자가 처리하도록 함
+    
     async def crawl_page_with_details(
         self,
         category: str,

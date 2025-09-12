@@ -1,4 +1,4 @@
-"""Data models and TypedDict definitions for Naramarket MCP Server."""
+"""Data models and TypedDict definitions for Naramarket FastMCP 2.0 Server."""
 
 from typing import Any, Dict, List, TypedDict
 
@@ -14,89 +14,46 @@ class CrawlListResult(TypedDict, total=False):
 
 
 class DetailResult(TypedDict, total=False):
-    """Result structure for detailed product attribute operations."""
+    """Result structure for detailed product attribute operations (enhanced in FastMCP 2.0)."""
     success: bool
     api_item: Dict[str, Any]
     attributes: Dict[str, Any]
+    metadata: Dict[str, Any]  # 추가된 메타데이터 지원
+    enhanced: bool  # 개선된 버전 여부
     error: str
+    error_type: str
+    payload_attempted: Dict[str, Any]
 
 
-class CrawlToCSVResult(TypedDict, total=False):
-    """Result structure for crawl to CSV operations."""
+class MemoryCrawlResult(TypedDict, total=False):
+    """Result structure for memory-based crawl operations (FastMCP 2.0)."""
     success: bool
+    items: List[Dict[str, Any]]
+    total_count: int
+    current_page: int
     category: str
-    output_csv: str
-    rows: int
-    windows_processed: int
-    pages_processed: int
-    total_products: int
-    success_details: int
-    failed_details: int
-    basic_columns: List[str]
-    attr_columns: List[str]
-    explode_attributes: bool
-    sanitize: bool
-    temp_file: str
-    temp_deleted: bool
-    incomplete: bool
-    remaining_days: int
-    next_anchor_end_date: str
-    covered_days: int
-    total_requested_days: int
-    elapsed_sec: float
-    max_windows_per_call: int
-    max_runtime_sec: int
-    append_mode: bool
-    existing_header_used: bool
-    new_basic_cols: List[str]
-    new_attr_cols: List[str]
-    new_columns_ignored: bool
+    attributes_included: bool
     error: str
 
 
-class SaveResultsResponse(TypedDict, total=False):
-    """Result structure for save results operations."""
+class OpenAPIResponse(TypedDict, total=False):
+    """Generic OpenAPI response structure."""
+    endpoint: str
+    params: Dict[str, Any]
+    description: str
+    method: str
+
+
+class EnhancedDetailResult(TypedDict, total=False):
+    """Enhanced result structure for detailed product attributes (improved version)."""
     success: bool
-    filename: str
-    products_count: int
+    api_item: Dict[str, Any]
+    attributes: Dict[str, Any]
+    metadata: Dict[str, Any]
+    enhanced: bool  # 개선된 버전 표시
     error: str
-
-
-class ConvertResult(TypedDict, total=False):
-    """Result structure for conversion operations."""
-    success: bool
-    input_file: str
-    output_file: str
-    rows_converted: int
-    error: str
-
-
-class MergeResult(TypedDict, total=False):
-    """Result structure for merge operations."""
-    success: bool
-    input_files: List[str]
-    output_file: str
-    total_rows: int
-    error: str
-
-
-class SummaryResult(TypedDict, total=False):
-    """Result structure for CSV summary operations."""
-    success: bool
-    file_path: str
-    rows: int
-    columns: int
-    headers: List[str]
-    preview: List[Dict[str, Any]]
-    error: str
-
-
-class FileInfo(TypedDict, total=False):
-    """File information structure."""
-    filename: str
-    path: str
-    size_bytes: int
-    modified_time: str
+    error_type: str
+    payload_attempted: Dict[str, Any]
 
 
 class ServerInfo(TypedDict, total=False):

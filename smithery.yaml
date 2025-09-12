@@ -1,0 +1,45 @@
+name: naramarket-mcp
+version: 0.1.0
+description: "Nara Market (G2B) FastMCP 2.0 server with OpenAPI integration for Korean government procurement data"
+
+# Smithery.ai deployment configuration
+runtime: "container"
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
+
+startCommand:
+  type: "http"
+  configSchema:
+    type: "object"
+    properties:
+      naramarketServiceKey:
+        type: "string"
+        title: "Nara Market Service Key"
+        description: "Korean government procurement API service key"
+      apiEnvironment:
+        type: "string"
+        title: "API Environment"
+        description: "API environment (production/development)"
+        default: "production"
+        enum: ["production", "development"]
+    required: ["naramarketServiceKey"]
+  exampleConfig:
+    naramarketServiceKey: "your-api-key-here"
+    apiEnvironment: "production"
+
+# Tags and metadata
+tags:
+  - mcp
+  - nara-market
+  - g2b
+  - korean-government
+  - procurement
+  - openapi
+  - fastmcp
+
+authors:
+  - name: "Your Name"
+    email: "you@example.com"
+
+license: "Apache-2.0"

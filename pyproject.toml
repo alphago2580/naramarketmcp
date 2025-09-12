@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "naramarket-mcp"
 version = "0.1.0"
-description = "Nara Market (G2B) FastMCP server: windowed crawling to CSV/Parquet"
+description = "Nara Market (G2B) FastMCP 2.0 server with OpenAPI integration"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
   {name = "Your Name", email = "you@example.com"}
@@ -21,11 +21,11 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-  "fastmcp>=0.1.0,<0.2.0",
+  "fastmcp>=2.0.0",
   "requests>=2.31.0,<2.33.0",
   "python-dotenv>=1.0.0,<1.1.0",
-  "pandas>=2.2.0,<2.3.0",
-  "pyarrow>=15.0.0,<18.0.0",
+  "uvicorn>=0.29.0,<0.33.0",
+  "starlette>=0.37.0,<0.40.0",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +40,7 @@ sse = [
 ]
 
 [project.scripts]
-naramarket-mcp = "naramarket_server.server:main"
+naramarket-mcp = "src.main:main"
 
 [tool.setuptools]
-packages = ["naramarket_server"]
+packages = ["src"]

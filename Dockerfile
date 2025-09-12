@@ -34,6 +34,8 @@ FROM base as production
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src
+ENV FASTMCP_TRANSPORT=http
+ENV FASTMCP_HOST=0.0.0.0
 
 # Copy only necessary files
 COPY src/ ./src/
@@ -45,12 +47,12 @@ COPY LICENSE ./
 RUN mkdir -p /app/data && chown -R naramarket:naramarket /app
 USER naramarket
 
-# Health check
+# Health check for MCP server
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/mcp || exit 1
 
-# Expose ports
-EXPOSE 8000 8001
+# Expose port (will be set by smithery.ai via PORT env var)
+EXPOSE ${PORT:-8000}
 
-# Default command (can be overridden)
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command for MCP server (smithery.ai compatible)
+CMD ["python", "src/main.py"]
