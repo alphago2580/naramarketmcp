@@ -305,32 +305,56 @@ def get_mas_contract_product_info(
 
 
 def main():
-    """Main entry point for the FastMCP 2.0 server."""
+    """Main entry point for the FastMCP 2.0 server with secure configuration."""
     logger.info(f"Starting {APP_NAME} FastMCP 2.0 server...")
     
-    # Check for transport mode
-    transport = os.environ.get("FASTMCP_TRANSPORT", "stdio")
-    host = os.environ.get("FASTMCP_HOST", "127.0.0.1")
+    try:
+        # Validate service key before starting server
+        from .core.config import get_service_key
+        get_service_key()  # This will raise an exception if key is invalid
+        
+        # Check for transport mode with security validation
+        transport = os.environ.get("FASTMCP_TRANSPORT", "stdio")
+        host = os.environ.get("FASTMCP_HOST", "127.0.0.1")
+        
+        # Validate host for production deployment
+        if transport in ["http", "sse"] and host == "0.0.0.0":
+            logger.warning("Server will bind to all interfaces (0.0.0.0) - ensure proper firewall configuration")
+        
+        # Use PORT environment variable (smithery.ai compatible)
+        try:
+            port = int(os.environ.get("PORT") or os.environ.get("FASTMCP_PORT", "8000"))
+        except ValueError:
+            logger.error("Invalid PORT value in environment, using default 8000")
+            port = 8000
+        
+        if transport == "http":
+            # HTTP mode for smithery.ai deployment
+            logger.info(f"Starting HTTP transport on {host}:{port} with /mcp endpoint")
+            logger.info("Transport mode: HTTP (production deployment)")
+            import asyncio
+            asyncio.run(mcp.run_async("sse", host=host, port=port))
+        elif transport == "sse":
+            # SSE mode for real-time communication
+            logger.info(f"Starting SSE transport on {host}:{port}")
+            logger.info("Transport mode: Server-Sent Events")
+            import asyncio
+            asyncio.run(mcp.run_async("sse", host=host, port=port))
+        else:
+            # Default STDIO mode for local development
+            logger.info("Starting STDIO transport")
+            logger.info("Transport mode: STDIO (development/local)")
+            mcp.run("stdio")
+            
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        logger.error("Server startup failed due to configuration issues")
+        return 1
+    except Exception as e:
+        logger.error(f"Server startup failed: {e}")
+        return 1
     
-    # Use PORT environment variable (smithery.ai compatible)
-    port = int(os.environ.get("PORT") or os.environ.get("FASTMCP_PORT", "8000"))
-    
-    if transport == "http":
-        # Streamable HTTP mode (FastMCP 2.0 recommended)
-        # Configure for smithery.ai with /mcp endpoint supporting GET/POST/DELETE
-        logger.info(f"Starting HTTP transport on {host}:{port} with /mcp endpoint")
-        # Use sse (Server-Sent Events) for HTTP transport in FastMCP 2.2.0
-        import asyncio
-        asyncio.run(mcp.run_async("sse", host=host, port=port))
-    elif transport == "sse":
-        # SSE mode
-        logger.info(f"Starting SSE transport on {host}:{port}")
-        import asyncio
-        asyncio.run(mcp.run_async("sse", host=host, port=port))
-    else:
-        # Default STDIO mode
-        logger.info("Starting STDIO transport")
-        mcp.run("stdio")
+    return 0
 
 
 if __name__ == "__main__":

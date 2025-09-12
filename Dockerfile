@@ -1,10 +1,16 @@
 # Multi-stage Docker build for optimized production image
 FROM python:3.11-slim as base
 
-# Install system dependencies
+# Install system dependencies including ca-certificates for HTTPS
 RUN apt-get update && apt-get install -y \
     curl \
+    ca-certificates \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# Set timezone (important for API timestamp validation)
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Set working directory
 WORKDIR /app
@@ -47,12 +53,15 @@ COPY LICENSE ./
 RUN mkdir -p /app/data && chown -R naramarket:naramarket /app
 USER naramarket
 
-# Health check for MCP server
+# Set dynamic port handling for smithery.ai
+ENV FASTMCP_PORT=${PORT:-8000}
+
+# Health check for MCP server with improved error handling
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/mcp || exit 1
+    CMD curl -f --max-time 5 http://localhost:${FASTMCP_PORT}/mcp || exit 1
 
 # Expose port (will be set by smithery.ai via PORT env var)
-EXPOSE ${PORT:-8000}
+EXPOSE ${FASTMCP_PORT}
 
 # Default command for MCP server (smithery.ai compatible)
 CMD ["python", "src/main.py"]

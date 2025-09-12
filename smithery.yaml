@@ -25,8 +25,15 @@ startCommand:
         enum: ["production", "development"]
     required: ["naramarketServiceKey"]
   exampleConfig:
-    naramarketServiceKey: "your-api-key-here"
+    naramarketServiceKey: "SECURE_API_KEY_REQUIRED"
     apiEnvironment: "production"
+  security:
+    # Security notice: Replace SECURE_API_KEY_REQUIRED with your actual API key
+    # Never commit real API keys to version control
+    # Use environment variables or secure configuration management
+    apiKeyRequired: true
+    encryptionRequired: false
+    httpsOnly: true
 
 # Tags and metadata
 tags:
@@ -37,9 +44,10 @@ tags:
   - procurement
   - openapi
   - fastmcp
+  - security-hardened
 
 authors:
-  - name: "Your Name"
-    email: "you@example.com"
+  - name: "NaraMarket MCP Team"
+    email: "support@naramarket-mcp.example.com"
 
 license: "Apache-2.0"

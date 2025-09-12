@@ -58,9 +58,12 @@ INSTITUTION_DIVISION_CODES = {
 }
 
 def parse_smithery_config() -> Dict[str, Any]:
-    """Parse configuration from smithery.ai query parameters."""
+    """Parse configuration from smithery.ai query parameters with error handling."""
     import urllib.parse
     from typing import Any, Dict
+    import logging
+    
+    logger = logging.getLogger(__name__)
     
     # Get query string from environment (smithery.ai passes this)
     query_string = os.environ.get("QUERY_STRING", "")
@@ -72,44 +75,74 @@ def parse_smithery_config() -> Dict[str, Any]:
             "apiEnvironment": os.environ.get("API_ENVIRONMENT", "production")
         }
     
-    # Parse query parameters
-    params = urllib.parse.parse_qs(query_string)
-    config = {}
+    try:
+        # Parse query parameters with error handling
+        params = urllib.parse.parse_qs(query_string)
+        config = {}
+        
+        # Handle dot notation (e.g., config.naramarketServiceKey=value)
+        for key, values in params.items():
+            if key.startswith("config.") or "." in key:
+                try:
+                    # Convert dot notation to nested structure
+                    parts = key.replace("config.", "").split(".")
+                    current = config
+                    for part in parts[:-1]:
+                        if part not in current:
+                            current[part] = {}
+                        current = current[part]
+                    current[parts[-1]] = values[0] if values else ""
+                except (IndexError, KeyError) as e:
+                    logger.warning(f"Error parsing config key '{key}': {e}")
+                    continue
+            else:
+                config[key] = values[0] if values else ""
+        
+        # Flatten if nested under config
+        if "config" in config and isinstance(config["config"], dict):
+            config = config["config"]
+        
+        return config
     
-    # Handle dot notation (e.g., config.naramarketServiceKey=value)
-    for key, values in params.items():
-        if key.startswith("config.") or "." in key:
-            # Convert dot notation to nested structure
-            parts = key.replace("config.", "").split(".")
-            current = config
-            for part in parts[:-1]:
-                if part not in current:
-                    current[part] = {}
-                current = current[part]
-            current[parts[-1]] = values[0] if values else ""
-        else:
-            config[key] = values[0] if values else ""
-    
-    # Flatten if nested under config
-    if "config" in config and isinstance(config["config"], dict):
-        config = config["config"]
-    
-    return config
+    except Exception as e:
+        logger.error(f"Error parsing smithery config from query string: {e}")
+        # Return safe fallback configuration
+        return {
+            "naramarketServiceKey": os.environ.get("NARAMARKET_SERVICE_KEY", ""),
+            "apiEnvironment": os.environ.get("API_ENVIRONMENT", "production")
+        }
 
 def get_service_key() -> str:
-    """Get Naramarket service key from environment or smithery.ai config."""
-    # First try smithery.ai configuration
-    config = parse_smithery_config()
-    key = config.get("naramarketServiceKey")
+    """Get Naramarket service key from environment or smithery.ai config with secure handling."""
+    import logging
     
-    if not key:
-        # Fallback to environment variable
-        key = os.environ.get("NARAMARKET_SERVICE_KEY")
+    logger = logging.getLogger(__name__)
     
-    if not key:
-        raise ValueError("naramarketServiceKey is required. Set via smithery.ai config or NARAMARKET_SERVICE_KEY environment variable")
-    
-    return key
+    try:
+        # First try smithery.ai configuration
+        config = parse_smithery_config()
+        key = config.get("naramarketServiceKey")
+        
+        if not key:
+            # Fallback to environment variable
+            key = os.environ.get("NARAMARKET_SERVICE_KEY")
+        
+        if not key:
+            logger.error("API service key not found in configuration")
+            raise ValueError("naramarketServiceKey is required. Set via smithery.ai config or NARAMARKET_SERVICE_KEY environment variable")
+        
+        # Validate key format (should not be placeholder)
+        if key in ["your-api-key-here", "SECURE_API_KEY_REQUIRED", "", "null", "undefined"]:
+            logger.error("Invalid or placeholder API key detected")
+            raise ValueError("Invalid API key. Please provide a valid naramarketServiceKey")
+        
+        # Log success without exposing the key
+        logger.info(f"API service key loaded successfully (length: {len(key)})")
+        return key
+        
+    except Exception as e:
+        logger.error(f"Error retrieving service key: {e}")
+        raise
 
 def get_api_environment() -> str:
     """Get API environment from smithery.ai config or environment."""
