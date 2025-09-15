@@ -11,36 +11,54 @@
 - **🔄 재시작 가능**: 부분 실행 및 이어받기 기능
 - **💾 유연한 저장**: CSV/Parquet 직접 저장으로 메모리 효율성
 
-## 🛠️ 사용 가능한 MCP 도구
+## 🛠️ 사용 가능한 MCP 도구 (총 15개)
 
-### 📦 나라장터 쇼핑몰 데이터 수집
+### 🏛️ 기본 API 호출 도구 (4개)
+
+| Tool | 기능 | 지원 API |
+|------|------|---------|
+| `call_public_data_standard_api` | 공공데이터개방표준 API 호출 | 입찰공고, 낙찰정보, 계약정보 등 |
+| `call_procurement_statistics_api` | 공공조달통계정보 API 호출 | 전체/기관별/기업별 조달 통계 |
+| `call_product_list_api` | 물품목록정보 API 호출 | 상품분류, 물품정보 등 |
+| `call_shopping_mall_api` | 종합쇼핑몰품목정보 API 호출 | MAS 계약 상품정보 |
+
+### 🤖 AI 친화 간편 도구 (4개)
+
+| Tool | 기능 | 특징 |
+|------|------|------|
+| `get_recent_bid_announcements` | 최근 입찰공고 조회 | 한글 업무구분, 자동 날짜 계산 |
+| `get_successful_bids_by_business_type` | 업무구분별 낙찰정보 조회 | 한글 입력, 자동 코드 변환 |
+| `get_procurement_statistics_by_year` | 연도별 조달통계 조회 | 간단한 연도 입력 |
+| `search_shopping_mall_products` | 쇼핑몰 제품 검색 | 제품명/업체명 검색 |
+
+### 🧭 고급 분석 도구 (4개)
 
 | Tool | 기능 | 용도 |
 |------|------|------|
-| `crawl_list` | 상품 목록 조회 | 소량 데이터 수집 및 디버깅 |
-| `get_detailed_attributes` | 상품 상세 속성 조회 | 개별 상품의 세부 정보 수집 |
-| `crawl_to_memory` | 메모리 기반 수집 | 소규모 목록+상세 데이터 통합 수집 |
+| `get_all_api_services_info` | 전체 API 서비스 정보 | 사용 가능한 모든 서비스 및 오퍼레이션 조회 |
+| `get_api_operations` | 서비스별 오퍼레이션 목록 | 특정 서비스의 세부 기능 확인 |
+| `call_api_with_pagination_support` | 페이징 지원 API 호출 | 대량 데이터 조회 및 탐색 가이드 |
+| `get_data_exploration_guide` | 데이터 탐색 가이드 | 파라미터 조합 및 검색 전략 제공 |
 
-### 🏢 G2B 정부조달 데이터 수집 (OpenAPI 통합)
-
-| Tool | 기능 | 데이터 종류 |
-|------|------|-------------|
-| `get_bid_announcement_info` | 입찰공고정보 조회 | 공개경쟁입찰, 제한경쟁입찰 등 |
-| `get_successful_bid_info` | 낙찰정보 조회 | 계약체결 결과 데이터 |
-| `get_contract_info` | 계약정보 조회 | 체결된 계약의 상세 정보 |
-| `get_total_procurement_status` | 조달현황 조회 | 전체 조달 통계 및 현황 |
-| `get_mas_contract_product_info` | MAS계약 상품정보 | 다수공급자계약 상품 데이터 |
-
-### 💾 데이터 관리 도구
+### 📦 기본 기능 도구 (3개)
 
 | Tool | 기능 | 설명 |
 |------|------|------|
-| `save_results` | JSON 파일 저장 | 메모리 데이터를 JSON으로 저장 |
-| `list_saved_json` | 저장 파일 목록 | 저장된 JSON 파일 리스트 조회 |
-| `convert_json_to_parquet` | 형식 변환 | JSON → Parquet (속성 펼치기 옵션) |
-| `merge_csv_files` | CSV 병합 | 여러 CSV 파일을 하나로 통합 |
-| `summarize_csv` | CSV 요약 | 헤더, 행 수, 데이터 미리보기 |
+| `crawl_list` | 나라장터 상품 목록 조회 | 기본 상품 리스트 수집 |
+| `get_detailed_attributes` | 상품 상세 속성 조회 | 개별 상품의 세부 정보 |
 | `server_info` | 서버 정보 | 버전 및 사용 가능한 도구 목록 |
+
+### 📚 AI 가이드 리소스 (3개 Resource + 3개 Prompt)
+
+#### MCP Resources
+- `api_parameter_requirements` - API별 필수/선택 파라미터 가이드
+- `parameter_value_examples` - 파라미터 값 예시 및 형식 가이드
+- `common_search_patterns` - 자주 사용되는 검색 패턴 및 최적화 전략
+
+#### MCP Prompts
+- `workflow_guide` - 단계별 워크플로우 가이드 (5가지 분석 시나리오)
+- `parameter_selection_guide` - 파라미터 선택 및 최적화 가이드
+- `real_world_query_examples` - 실제 업무 시나리오별 쿼리 예제 (8가지)
 
 ## 🔧 설치 및 실행
 

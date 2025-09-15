@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 authors = [
-  {name = "Your Name", email = "you@example.com"}
+  {name = "NaraMarket MCP Team", email = "ss929698@gmail.com"}
 ]
 keywords = ["mcp", "nara", "g2b", "crawler", "open-data", "fastmcp"]
 classifiers = [
@@ -24,6 +24,7 @@ dependencies = [
   "fastmcp>=2.0.0",
   "requests>=2.31.0,<2.33.0",
   "python-dotenv>=1.0.0,<1.1.0",
+  "pandas>=2.0.0,<2.3.0",
   "uvicorn>=0.29.0,<0.33.0",
   "starlette>=0.37.0,<0.40.0",
 ]

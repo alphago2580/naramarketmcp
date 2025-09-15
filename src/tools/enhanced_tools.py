@@ -2,6 +2,9 @@
 
 import logging
 import sys
+import json
+import os
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from ..core.enhanced_client import enhanced_api_client
@@ -153,6 +156,83 @@ class EnhancedProcurementTools(BaseTool):
 
         return protected_result
 
+    def _create_pagination_info(self, result: Dict[str, Any], service_type: str, operation: str, current_params: Dict[str, Any]) -> Dict[str, Any]:
+        """페이징 정보와 다음 요청 가이드를 생성합니다."""
+        try:
+            # API 응답에서 페이징 정보 추출
+            body = result.get("response", {}).get("body", {})
+            total_count = body.get("totalCount", 0)
+            current_page = current_params.get("pageNo", 1)
+            num_rows = current_params.get("numOfRows", 5)
+
+            total_pages = (total_count + num_rows - 1) // num_rows if total_count > 0 else 1
+            has_next = current_page < total_pages
+
+            pagination_info = {
+                "current_page": current_page,
+                "total_pages": total_pages,
+                "total_items": total_count,
+                "items_per_page": num_rows,
+                "has_next_page": has_next,
+                "next_page": current_page + 1 if has_next else None
+            }
+
+            # 다음 요청을 위한 파라미터 제안
+            if has_next:
+                next_params = current_params.copy()
+                next_params["pageNo"] = current_page + 1
+
+                pagination_info["next_request_example"] = {
+                    "service_type": service_type,
+                    "operation": operation,
+                    "suggested_params": next_params
+                }
+
+            return pagination_info
+
+        except Exception as e:
+            logger.error(f"Failed to create pagination info: {e}")
+            return {
+                "error": "페이징 정보 생성 실패",
+                "current_page": current_params.get("pageNo", 1)
+            }
+
+    def call_api_with_pagination_guidance(
+        self,
+        service_type: str,
+        operation: str,
+        params: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """API 호출 후 페이징 안내와 함께 컨텍스트 보호된 응답을 제공합니다."""
+        try:
+            result = self.client.call_api(service_type, operation, params)
+
+            # 컨텍스트 보호 적용
+            protected_result = self._protect_context_response(result, service_type, operation)
+
+            # 페이징 정보 생성
+            pagination_info = self._create_pagination_info(result, service_type, operation, params)
+
+            return {
+                "success": True,
+                "service": service_type,
+                "operation": operation,
+                "data": protected_result,
+                "pagination": pagination_info,
+                "params_used": params,
+                "remote_server_note": "리모트 서버 환경에서는 전체 데이터 접근을 위해 페이징을 사용하세요"
+            }
+
+        except Exception as e:
+            logger.error(f"API call failed: {e}")
+            return {
+                "success": False,
+                "service": service_type,
+                "operation": operation,
+                "error": str(e),
+                "error_type": type(e).__name__
+            }
+
     def call_public_data_standard_api(
         self,
         operation: str,
@@ -191,11 +271,14 @@ class EnhancedProcurementTools(BaseTool):
 
             result = self.client.call_api("public_data_standard", operation, params)
 
+            # 컨텍스트 보호 적용
+            protected_result = self._protect_context_response(result, "public_data_standard", operation)
+
             return {
                 "success": True,
                 "service": "공공데이터개방표준서비스",
                 "operation": operation,
-                "data": result,
+                "data": protected_result,
                 "params_used": params
             }
 
@@ -212,7 +295,7 @@ class EnhancedProcurementTools(BaseTool):
     def call_procurement_statistics_api(
         self,
         operation: str,
-        numOfRows: int = 10,
+        numOfRows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
         pageNo: int = 1,
         **kwargs
     ) -> Dict[str, Any]:
@@ -259,11 +342,14 @@ class EnhancedProcurementTools(BaseTool):
 
             result = self.client.call_api("procurement_statistics", operation, params)
 
+            # 컨텍스트 보호 적용
+            protected_result = self._protect_context_response(result, "procurement_statistics", operation)
+
             return {
                 "success": True,
                 "service": "공공조달통계정보서비스",
                 "operation": operation,
-                "data": result,
+                "data": protected_result,
                 "params_used": params
             }
 
@@ -280,7 +366,7 @@ class EnhancedProcurementTools(BaseTool):
     def call_product_list_api(
         self,
         operation: str,
-        numOfRows: int = 10,
+        numOfRows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
         pageNo: int = 1,
         **kwargs
     ) -> Dict[str, Any]:
@@ -329,11 +415,14 @@ class EnhancedProcurementTools(BaseTool):
 
             result = self.client.call_api("product_list", operation, params)
 
+            # 컨텍스트 보호 적용
+            protected_result = self._protect_context_response(result, "product_list", operation)
+
             return {
                 "success": True,
                 "service": "조달청 물품목록정보서비스",
                 "operation": operation,
-                "data": result,
+                "data": protected_result,
                 "params_used": params
             }
 
@@ -350,7 +439,7 @@ class EnhancedProcurementTools(BaseTool):
     def call_shopping_mall_api(
         self,
         operation: str,
-        numOfRows: int = 10,
+        numOfRows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
         pageNo: int = 1,
         **kwargs
     ) -> Dict[str, Any]:
@@ -404,11 +493,14 @@ class EnhancedProcurementTools(BaseTool):
 
             result = self.client.call_api("shopping_mall", operation, params)
 
+            # 컨텍스트 보호 적용
+            protected_result = self._protect_context_response(result, "shopping_mall", operation)
+
             return {
                 "success": True,
                 "service": "나라장터 종합쇼핑몰 품목정보 서비스",
                 "operation": operation,
-                "data": result,
+                "data": protected_result,
                 "params_used": params
             }
 

@@ -5,6 +5,8 @@ fastmcp>=2.0.0
 requests>=2.31.0,<2.33.0
 # .env secret loading (NARAMARKET_SERVICE_KEY)
 python-dotenv>=1.0.0,<1.1.0
+# Data processing for CSV/Parquet conversion
+pandas>=2.0.0,<2.3.0
 # Additional dependencies for HTTP server mode (smithery.ai deployment)
 uvicorn>=0.29.0,<0.33.0
 starlette>=0.37.0,<0.40.0

@@ -16,7 +16,6 @@ from .core.models import (
     ServerInfo
 )
 from .tools.naramarket import naramarket_tools
-from .tools.openapi_tools import openapi_tools
 from .tools.enhanced_tools import enhanced_tools
 
 
@@ -79,237 +78,20 @@ def get_detailed_attributes(api_item: Dict[str, Any]) -> DetailResult:
 
 
 @mcp.tool()
-def crawl_to_memory(
-    category: str,
-    page_no: int = 1,
-    num_rows: int = 100,
-    days_back: int = 7,
-    inqry_bgn_date: Optional[str] = None,
-    inqry_end_date: Optional[str] = None,
-    include_attributes: bool = True
-) -> Dict[str, Any]:
-    """Crawl category data and return results in memory (no file saving).
-    
-    Args:
-        category: Product category to crawl
-        page_no: Page number to fetch (default 1)
-        num_rows: Number of rows per page (default 100)
-        days_back: Days to go back if dates not provided (default 7)
-        inqry_bgn_date: Start date in YYYYMMDD format
-        inqry_end_date: End date in YYYYMMDD format
-        include_attributes: Include detailed attributes for each item
-        
-    Returns:
-        Dict with crawled data in memory
-    """
-    # Get list data
-    list_result = naramarket_tools.crawl_list(
-        category=category,
-        page_no=page_no,
-        num_rows=num_rows,
-        days_back=days_back,
-        inqry_bgn_date=inqry_bgn_date,
-        inqry_end_date=inqry_end_date
-    )
-    
-    if not list_result.get("success") or not include_attributes:
-        return list_result
-    
-    # Get detailed attributes for each item
-    items_with_attributes = []
-    for item in list_result.get("items", []):
-        detail_result = naramarket_tools.get_detailed_attributes(item)
-        if detail_result.get("success"):
-            item_with_attrs = item.copy()
-            item_with_attrs["detailed_attributes"] = detail_result.get("attributes", {})
-            items_with_attributes.append(item_with_attrs)
-        else:
-            items_with_attributes.append(item)
-    
-    return {
-        "success": True,
-        "items": items_with_attributes,
-        "total_count": list_result.get("total_count", 0),
-        "current_page": page_no,
-        "category": category,
-        "attributes_included": include_attributes
-    }
-
-
-
-
-@mcp.tool()
 def server_info() -> ServerInfo:
     """Get server status and available tools list.
-    
+
     Returns:
         ServerInfo with server details
     """
     return naramarket_tools.server_info()
 
 
-# OpenAPI-based tools
-@mcp.tool()
-def get_bid_announcement_info(
-    num_rows: int = 10,
-    page_no: int = 1,
-    bid_notice_start_date: Optional[str] = None,
-    bid_notice_end_date: Optional[str] = None
-) -> Dict[str, Any]:
-    """입찰공고정보 조회 (OpenAPI 기반).
-    
-    Args:
-        num_rows: 한 페이지 결과 수
-        page_no: 페이지 번호
-        bid_notice_start_date: 입찰공고시작일시 (YYYYMMDDHHMM)
-        bid_notice_end_date: 입찰공고종료일시 (YYYYMMDDHHMM)
-        
-    Returns:
-        입찰공고정보 조회 결과
-    """
-    return openapi_tools.get_bid_announcement_info(
-        num_rows=num_rows,
-        page_no=page_no,
-        bid_notice_start_date=bid_notice_start_date,
-        bid_notice_end_date=bid_notice_end_date
-    )
-
-
-@mcp.tool()
-def get_successful_bid_info(
-    business_div_code: str,
-    num_rows: int = 10,
-    page_no: int = 1,
-    opening_start_date: Optional[str] = None,
-    opening_end_date: Optional[str] = None
-) -> Dict[str, Any]:
-    """낙찰정보 조회 (OpenAPI 기반).
-    
-    Args:
-        business_div_code: 업무구분코드 (1:물품, 2:외자, 3:공사, 5:용역)
-        num_rows: 한 페이지 결과 수
-        page_no: 페이지 번호
-        opening_start_date: 개찰시작일시 (YYYYMMDDHHMM)
-        opening_end_date: 개찰종료일시 (YYYYMMDDHHMM)
-        
-    Returns:
-        낙찰정보 조회 결과
-    """
-    return openapi_tools.get_successful_bid_info(
-        business_div_code=business_div_code,
-        num_rows=num_rows,
-        page_no=page_no,
-        opening_start_date=opening_start_date,
-        opening_end_date=opening_end_date
-    )
-
-
-@mcp.tool()
-def get_contract_info(
-    num_rows: int = 10,
-    page_no: int = 1,
-    contract_start_date: Optional[str] = None,
-    contract_end_date: Optional[str] = None,
-    institution_div_code: Optional[str] = None,
-    institution_code: Optional[str] = None
-) -> Dict[str, Any]:
-    """계약정보 조회 (OpenAPI 기반).
-    
-    Args:
-        num_rows: 한 페이지 결과 수
-        page_no: 페이지 번호
-        contract_start_date: 계약체결시작일자 (YYYYMMDD)
-        contract_end_date: 계약체결종료일자 (YYYYMMDD)
-        institution_div_code: 기관구분코드 (1:계약기관, 2:수요기관)
-        institution_code: 기관코드
-        
-    Returns:
-        계약정보 조회 결과
-    """
-    return openapi_tools.get_contract_info(
-        num_rows=num_rows,
-        page_no=page_no,
-        contract_start_date=contract_start_date,
-        contract_end_date=contract_end_date,
-        institution_div_code=institution_div_code,
-        institution_code=institution_code
-    )
-
-
-@mcp.tool()
-def get_total_procurement_status(
-    num_rows: int = 10,
-    page_no: int = 1,
-    search_base_year: Optional[str] = None
-) -> Dict[str, Any]:
-    """전체 공공조달 현황 조회 (OpenAPI 기반).
-    
-    Args:
-        num_rows: 한 페이지 결과 수
-        page_no: 페이지 번호
-        search_base_year: 검색기준년도 (YYYY)
-        
-    Returns:
-        전체 공공조달 현황 조회 결과
-    """
-    return openapi_tools.get_total_procurement_status(
-        num_rows=num_rows,
-        page_no=page_no,
-        search_base_year=search_base_year
-    )
-
-
-@mcp.tool()
-def get_mas_contract_product_info(
-    num_rows: int = 10,
-    page_no: int = 1,
-    registration_start_date: Optional[str] = None,
-    registration_end_date: Optional[str] = None,
-    product_name: Optional[str] = None,
-    product_id: Optional[str] = None,
-    contract_company_name: Optional[str] = None,
-    change_start_date: Optional[str] = None,
-    change_end_date: Optional[str] = None,
-    product_certification: Optional[str] = None
-) -> Dict[str, Any]:
-    """다수공급자계약 품목정보 조회 (OpenAPI 기반) - 핵심 API.
-    
-    이 API는 get_detailed_attributes와 연계되어 사용되는 매우 중요한 API입니다.
-    
-    Args:
-        num_rows: 한 페이지 결과 수
-        page_no: 페이지 번호
-        registration_start_date: 등록일시 시작일시 (YYYYMMDDHH24M)
-        registration_end_date: 등록일시 종료일시 (YYYYMMDDHH24M)
-        product_name: 품명
-        product_id: 물품식별번호
-        contract_company_name: 계약업체명
-        change_start_date: 변경일시 시작일시 (YYYYMMDDHH24M)
-        change_end_date: 변경일시 종료일시 (YYYYMMDDHH24M)
-        product_certification: 제품인증여부 (Y/N)
-        
-    Returns:
-        다수공급자계약 품목정보 조회 결과
-    """
-    return openapi_tools.get_mas_contract_product_info(
-        num_rows=num_rows,
-        page_no=page_no,
-        registration_start_date=registration_start_date,
-        registration_end_date=registration_end_date,
-        product_name=product_name,
-        product_id=product_id,
-        contract_company_name=contract_company_name,
-        change_start_date=change_start_date,
-        change_end_date=change_end_date,
-        product_certification=product_certification
-    )
-
-
 # Enhanced Korean Government Procurement APIs (Parameterized)
 @mcp.tool()
 def call_public_data_standard_api(
     operation: str,
-    num_rows: int = 10,
+    num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
     page_no: int = 1,
     bid_notice_start_date: Optional[str] = None,
     bid_notice_end_date: Optional[str] = None,
@@ -367,7 +149,7 @@ def call_public_data_standard_api(
 @mcp.tool()
 def call_procurement_statistics_api(
     operation: str,
-    num_rows: int = 10,
+    num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
     page_no: int = 1,
     search_base_year: Optional[str] = None,
     search_base_month_start: Optional[str] = None,
@@ -442,7 +224,7 @@ def call_procurement_statistics_api(
 @mcp.tool()
 def call_product_list_api(
     operation: str,
-    num_rows: int = 10,
+    num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
     page_no: int = 1,
     upper_product_classification_no: Optional[str] = None,
     product_classification_no: Optional[str] = None,
@@ -524,7 +306,7 @@ def call_product_list_api(
 @mcp.tool()
 def call_shopping_mall_api(
     operation: str,
-    num_rows: int = 10,
+    num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
     page_no: int = 1,
     registration_start_date: Optional[str] = None,
     registration_end_date: Optional[str] = None,
@@ -645,6 +427,923 @@ def get_api_operations(service_type: str) -> Dict[str, Any]:
         서비스별 오퍼레이션 목록
     """
     return enhanced_tools.get_api_operations(service_type)
+
+
+@mcp.tool()
+def call_api_with_pagination_support(
+    service_type: str,
+    operation: str,
+    num_rows: int = 10,  # 리모트 서버에서는 적당한 크기 유지
+    page_no: int = 1,
+    **kwargs
+) -> Dict[str, Any]:
+    """페이징 지원 API 호출 (리모트 서버 환경 최적화).
+
+    이 도구는 리모트 서버 환경에서 많은 데이터를 효율적으로 탐색할 때 사용하세요.
+    컨텍스트 보호와 함께 다음 페이지 요청 방법을 자동으로 제공합니다.
+
+    Args:
+        service_type: 서비스 타입 (public_data_standard, procurement_statistics, product_list, shopping_mall)
+        operation: API 오퍼레이션명
+        num_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        **kwargs: 각 오퍼레이션별 추가 파라미터
+
+    Returns:
+        컨텍스트 보호된 API 응답 데이터 + 페이징 안내
+    """
+    params = {
+        "numOfRows": num_rows,
+        "pageNo": page_no,
+        **kwargs
+    }
+
+    return enhanced_tools.call_api_with_pagination_guidance(
+        service_type=service_type,
+        operation=operation,
+        params=params
+    )
+
+
+@mcp.tool()
+def get_data_exploration_guide(
+    service_type: str,
+    operation: str,
+    expected_data_size: str = "medium"
+) -> Dict[str, Any]:
+    """데이터 탐색을 위한 최적화된 매개변수 가이드 제공.
+
+    리모트 서버 환경에서 효율적인 데이터 탐색을 위한 권장 설정을 제공합니다.
+
+    Args:
+        service_type: 서비스 타입
+        operation: API 오퍼레이션명
+        expected_data_size: 예상 데이터 크기 ("small", "medium", "large")
+
+    Returns:
+        최적화된 탐색 가이드
+    """
+    size_configs = {
+        "small": {"num_rows": 10, "strategy": "단일 요청으로 충분"},
+        "medium": {"num_rows": 5, "strategy": "2-3회 페이징 권장"},
+        "large": {"num_rows": 3, "strategy": "다중 페이징으로 점진적 탐색"}
+    }
+
+    config = size_configs.get(expected_data_size, size_configs["medium"])
+
+    return {
+        "service_type": service_type,
+        "operation": operation,
+        "recommended_config": config,
+        "sample_first_request": {
+            "num_rows": config["num_rows"],
+            "page_no": 1
+        },
+        "exploration_tips": [
+            "첫 번째 요청으로 데이터 구조 파악",
+            "pagination 정보로 전체 규모 확인",
+            "필요한 경우 검색 조건 추가로 범위 축소",
+            "컨텍스트 윈도우 보호를 위해 작은 페이지 크기 유지"
+        ],
+        "context_protection": {
+            "auto_applied": True,
+            "max_items_shown": 5,
+            "key_fields_only": True
+        }
+    }
+
+
+# AI-Friendly Simplified Tools (자주 사용되는 기능들)
+@mcp.tool()
+def get_recent_bid_announcements(
+    num_rows: int = 5,
+    days_back: int = 7
+) -> Dict[str, Any]:
+    """최근 입찰공고 조회 (AI 친화적 단순 도구).
+
+    가장 자주 사용되는 입찰공고 조회 기능을 단순화했습니다.
+
+    Args:
+        num_rows: 조회할 공고 수 (기본값: 5)
+        days_back: 며칠 전까지 조회할지 (기본값: 7일)
+
+    Returns:
+        최근 입찰공고 목록
+    """
+    from datetime import datetime, timedelta
+
+    # 자동으로 날짜 범위 계산
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days_back)
+
+    return enhanced_tools.call_public_data_standard_api(
+        operation="getDataSetOpnStdBidPblancInfo",
+        numOfRows=num_rows,
+        pageNo=1,
+        bidNtceBgnDt=start_date.strftime("%Y%m%d0000"),
+        bidNtceEndDt=end_date.strftime("%Y%m%d2359")
+    )
+
+
+@mcp.tool()
+def get_successful_bids_by_business_type(
+    business_type: str,
+    num_rows: int = 5,
+    days_back: int = 30
+) -> Dict[str, Any]:
+    """업무구분별 낙찰정보 조회 (AI 친화적 단순 도구).
+
+    Args:
+        business_type: 업무구분 ("물품", "외자", "공사", "용역" 중 선택)
+        num_rows: 조회할 결과 수 (기본값: 5)
+        days_back: 며칠 전까지 조회할지 (기본값: 30일)
+
+    Returns:
+        업무구분별 낙찰정보
+    """
+    from datetime import datetime, timedelta
+
+    # 한글을 코드로 변환
+    business_codes = {
+        "물품": "1",
+        "외자": "2",
+        "공사": "3",
+        "용역": "5"
+    }
+
+    business_code = business_codes.get(business_type, "1")
+
+    # 자동으로 날짜 범위 계산
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days_back)
+
+    return enhanced_tools.call_public_data_standard_api(
+        operation="getDataSetOpnStdScsbidInfo",
+        numOfRows=num_rows,
+        pageNo=1,
+        bsnsDivCd=business_code,
+        opengBgnDt=start_date.strftime("%Y%m%d0000"),
+        opengEndDt=end_date.strftime("%Y%m%d2359")
+    )
+
+
+@mcp.prompt()
+def workflow_guide() -> str:
+    """정부조달 데이터 분석을 위한 단계별 워크플로우 가이드"""
+    return """
+# 정부조달 데이터 분석 워크플로우 가이드
+
+## 1. 기본 데이터 탐색 단계
+
+### 1-1. 입찰공고 현황 파악
+- **목적**: 최신 입찰 동향 파악
+- **도구**: `get_recent_bid_announcements()`
+- **권장설정**: 업무구분="물품", 일수=7-30일, 결과수=5-10개
+- **활용**: 시장 트렌드, 입찰 빈도 분석
+
+### 1-2. 낙찰결과 분석
+- **목적**: 성공한 입찰의 패턴 분석
+- **도구**: `get_successful_bids_by_business()`
+- **권장설정**: 업무구분별 구분 조회, 30일 기간
+- **활용**: 가격 범위, 선정 기준 분석
+
+## 2. 심화 분석 단계
+
+### 2-1. 통계 기반 시장 분석
+- **목적**: 연도별/기관별 조달 규모 파악
+- **도구**: `get_procurement_statistics_by_year()`
+- **권장설정**: 최근 2-3년 데이터 비교
+- **활용**: 시장 규모 변화, 성장률 분석
+
+### 2-2. 상품별 세부 분석
+- **목적**: 특정 품목의 조달 현황
+- **도구**: `get_mas_products_by_category()`
+- **권장설정**: 분류코드 지정, 충분한 결과수
+- **활용**: 품목별 가격 비교, 수요 패턴
+
+## 3. 맞춤형 검색 전략
+
+### 3-1. 키워드 기반 검색
+- **상황**: 특정 제품/서비스 찾기
+- **방법**: operation에 적절한 검색 파라미터 조합
+- **팁**: 한글 입력시 자동 코드 변환 활용
+
+### 3-2. 날짜 범위 최적화
+- **최신 동향**: 7-30일 범위
+- **트렌드 분석**: 3-12개월 범위
+- **연도별 비교**: 전체 연도 단위
+
+## 4. 결과 해석 및 활용
+
+### 4-1. 컨텍스트 보호 이해
+- 기본 5개 결과로 제한됨 (컨텍스트 보호)
+- 더 많은 데이터 필요시 페이징 가이드 활용
+- 핵심 필드 위주로 정보 제공됨
+
+### 4-2. 후속 분석 방향
+- 특정 패턴 발견시 관련 카테고리 추가 탐색
+- 이상 데이터 발견시 다른 기간/조건으로 재검색
+- 통계 데이터와 실제 입찰 데이터 교차 검증
+
+## 5. 일반적인 분석 시나리오
+
+### 시나리오 A: 신규 시장 진입 검토
+1. 관련 업무구분의 최근 입찰공고 조회
+2. 해당 분야 낙찰 현황 및 가격대 파악
+3. 연도별 시장 규모 변화 분석
+4. 경쟁사 참여 패턴 분석
+
+### 시나리오 B: 기존 제품 시장 모니터링
+1. 해당 품목 코드로 MAS 상품 현황 조회
+2. 가격 변동 및 계약 조건 추적
+3. 신규 참여 업체 및 변화 감지
+4. 계절성 또는 주기적 패턴 파악
+
+### 시나리오 C: 전략적 시장 분석
+1. 여러 업무구분별 전체 시장 현황 파악
+2. 기관별/지역별 조달 특성 분석
+3. 정책 변화가 시장에 미친 영향 추적
+4. 미래 시장 기회 및 위험 요소 식별
+"""
+
+@mcp.tool()
+def get_procurement_statistics_by_year(
+    year: str,
+    num_rows: int = 10
+) -> Dict[str, Any]:
+    """연도별 공공조달 통계 조회 (AI 친화적 단순 도구).
+
+    Args:
+        year: 조회할 연도 (예: "2024")
+        num_rows: 조회할 결과 수 (기본값: 10)
+
+    Returns:
+        연도별 공공조달 통계
+    """
+    return enhanced_tools.call_procurement_statistics_api(
+        operation="getTotlPubPrcrmntSttus",
+        numOfRows=num_rows,
+        pageNo=1,
+        srchBssYear=year
+    )
+
+
+@mcp.prompt()
+def parameter_selection_guide() -> str:
+    """API 파라미터 선택 및 최적화 가이드"""
+    return """
+# API 파라미터 선택 및 최적화 가이드
+
+## 1. 필수 vs 선택 파라미터 구분
+
+### 필수 파라미터 (Required)
+- **numOfRows**: 결과 수 제한 (기본값: 5-10 권장)
+- **pageNo**: 페이지 번호 (기본값: 1)
+- **operation**: API 작업 유형 (각 서비스별 필수)
+
+### 중요한 선택 파라미터 (Important Optional)
+#### 날짜 관련
+- **조회 시작일/종료일**: 데이터 범위 제한에 핵심
+- **공고일/개찰일**: 입찰 일정 기준 설정
+- **기준연도**: 통계 데이터 조회시 필수적
+
+#### 분류 관련
+- **업무구분코드**: "1"(물품), "2"(외자), "3"(공사), "5"(용역)
+- **기관코드**: 특정 기관 데이터만 조회
+- **분류코드**: 상품/서비스 카테고리 지정
+
+## 2. 파라미터 값 선택 전략
+
+### 2-1. 날짜 범위 설정
+```
+최신 동향 파악: 7-30일 이내
+트렌드 분석: 3-6개월 범위
+연간 비교: 전체 연도 단위
+```
+
+### 2-2. 결과 수 최적화
+```
+초기 탐색: 5-10개 (컨텍스트 보호)
+상세 분석: 10-20개 (필요시)
+전체 조회: 50-100개 (페이징 활용)
+```
+
+### 2-3. 업무구분 선택 기준
+```
+물품(1): 일반 용품, 장비, 소모품
+외자(2): 해외 조달, 수입품
+공사(3): 건설, 시설 공사
+용역(5): 서비스, 컨설팅, 유지보수
+```
+
+## 3. 서비스별 최적 파라미터 조합
+
+### 3-1. 공공데이터개방표준 (Public Data)
+#### 입찰공고 조회시
+- **필수**: operation, numOfRows, pageNo
+- **권장**: bsnsDivCd(업무구분), bidNtceOdr(공고차수)
+- **날짜**: opengBgnDt, opengEndDt (공고기간)
+
+#### 낙찰정보 조회시
+- **필수**: operation, numOfRows, pageNo
+- **권장**: bsnsDivCd(업무구분), dminsttCd(기관코드)
+- **날짜**: opengBgnDt, opengEndDt (개찰기간)
+
+### 3-2. 공공조달통계정보 (Procurement Stats)
+#### 기본 통계 조회시
+- **필수**: operation, numOfRows, srchBssYear(기준연도)
+- **선택**: dminsttCd(기관코드), bsnsDivCd(업무구분)
+
+### 3-3. 물품목록정보 (Product List)
+#### 상품 조회시
+- **필수**: operation, numOfRows
+- **권장**: prdctClsfcLclasCode(대분류), prdctClsfcMlsfcCode(중분류)
+- **검색**: prdctNm(상품명), entrpsNm(업체명)
+
+### 3-4. 종합쇼핑몰품목정보 (Shopping Mall)
+#### 제품 검색시
+- **필수**: operation, numOfRows
+- **검색**: prdctClsfcNoNm(제품명), cntrctCnclsCompanyNm(업체명)
+- **필터**: dtlPrdctClsfcNo(상세분류번호)
+
+## 4. 파라미터 값 형식 가이드
+
+### 4-1. 날짜 형식
+```
+YYYYMMDD0000: 시작일 (0시)
+YYYYMMDD2359: 종료일 (23시 59분)
+YYYY: 연도 (통계 조회시)
+YYYYMM: 년월 (월별 조회시)
+```
+
+### 4-2. 코드 형식
+```
+업무구분: "1", "2", "3", "5" (문자열)
+기관코드: 6자리 숫자 문자열
+분류코드: 계층적 숫자 코드 (2-8자리)
+```
+
+### 4-3. 검색어 형식
+```
+한글: UTF-8 인코딩, 부분 매칭 지원
+영문: 대소문자 구분 없음
+숫자: 문자열로 전달
+특수문자: URL 인코딩 필요
+```
+
+## 5. 성능 최적화 팁
+
+### 5-1. 요청 최적화
+- 필요한 필드만 조회 (컨텍스트 보호 자동 적용)
+- 적절한 페이지 크기 설정 (5-20개)
+- 날짜 범위 제한으로 결과 축소
+
+### 5-2. 에러 방지
+- 필수 파라미터 누락 확인
+- 날짜 형식 정확성 검증
+- 코드 값 유효성 사전 확인
+- 특수문자 인코딩 처리
+
+### 5-3. 결과 해석
+- 빈 결과시 조건 완화 시도
+- 너무 많은 결과시 필터 강화
+- 오류 응답시 파라미터 재검토
+
+## 6. 일반적인 파라미터 실수와 해결책
+
+### 실수 1: 날짜 범위 과도하게 넓게 설정
+**해결**: 최근 30-90일로 제한하여 시작
+
+### 실수 2: 필수 파라미터 누락
+**해결**: operation별 필수 파라미터 체크리스트 확인
+
+### 실수 3: 결과 수 과다 요청
+**해결**: 초기엔 5-10개로 시작, 필요시 점진적 증가
+
+### 실수 4: 잘못된 코드 값 사용
+**해결**: 코드 매핑 테이블 참조 또는 유효 값 조회 먼저 실행
+"""
+
+@mcp.tool()
+def search_shopping_mall_products(
+    product_name: Optional[str] = None,
+    company_name: Optional[str] = None,
+    num_rows: int = 5
+) -> Dict[str, Any]:
+    """나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구).
+
+    Args:
+        product_name: 검색할 제품명 (선택사항)
+        company_name: 검색할 업체명 (선택사항)
+        num_rows: 조회할 결과 수 (기본값: 5)
+
+    Returns:
+        쇼핑몰 제품 검색 결과
+    """
+    kwargs = {}
+    if product_name:
+        kwargs["prdctClsfcNoNm"] = product_name
+    if company_name:
+        kwargs["cntrctCorpNm"] = company_name
+
+    return enhanced_tools.call_shopping_mall_api(
+        operation="getMASCntrctPrdctInfoList",
+        numOfRows=num_rows,
+        pageNo=1,
+        **kwargs
+    )
+
+
+# MCP Resources - API 사용 가이드
+@mcp.resource("guide://api-parameter-requirements")
+def api_parameter_requirements() -> str:
+    """정부조달 API 파라미터 요구사항 가이드.
+
+    각 API별 필수/선택/권장 파라미터와 상황별 사용법을 제공합니다.
+    """
+    return """
+# 정부조달 API 파라미터 가이드
+
+## 공공데이터개방표준서비스 (call_public_data_standard_api)
+
+### 입찰공고정보 조회 (getDataSetOpnStdBidPblancInfo)
+- **필수**: operation="getDataSetOpnStdBidPblancInfo"
+- **강력 권장**: bid_notice_start_date, bid_notice_end_date (날짜 범위)
+- **선택**: num_rows, page_no, 기관 관련 파라미터
+
+### 낙찰정보 조회 (getDataSetOpnStdScsbidInfo)
+- **필수**: operation="getDataSetOpnStdScsbidInfo", business_div_code
+- **business_div_code 값**: "1"=물품, "2"=외자, "3"=공사, "5"=용역
+- **권장**: opening_start_date, opening_end_date (개찰일시 범위)
+- **선택**: num_rows, page_no
+
+### 계약정보 조회 (getDataSetOpnStdCntrctInfo)
+- **필수**: operation="getDataSetOpnStdCntrctInfo"
+- **권장**: contract_start_date, contract_end_date (계약체결일자 범위)
+- **선택**: institution_div_code ("1"=계약기관, "2"=수요기관), institution_code
+
+## 공공조달통계정보서비스 (call_procurement_statistics_api)
+
+### 전체 공공조달 현황 (getTotlPubPrcrmntSttus)
+- **필수**: operation="getTotlPubPrcrmntSttus"
+- **강력 권장**: search_base_year (YYYY 형식, 예: "2024")
+- **선택**: num_rows, page_no
+
+### 기관별/기업별 실적 조회
+- **필수**: operation (해당 오퍼레이션명)
+- **권장**: search_base_year, demand_institution_code 또는 corp_unity_no
+- **선택**: 기타 필터 파라미터
+
+## 종합쇼핑몰품목정보서비스 (call_shopping_mall_api)
+
+### 다수공급자계약 품목정보 (getMASCntrctPrdctInfoList)
+- **필수**: operation="getMASCntrctPrdctInfoList"
+- **효과적 검색을 위한 권장**: product_name(품명) OR company_name(업체명) 중 하나 이상
+- **선택**: registration_start_date, registration_end_date, 기타 필터
+
+## 물품목록정보서비스 (call_product_list_api)
+
+### 품목 분류 조회
+- **필수**: operation (getPrdctClsfcNoUnit2Info, getPrdctClsfcNoUnit4Info 등)
+- **계층별 조회시 권장**: upper_product_classification_no (상위 분류번호)
+- **선택**: num_rows, page_no
+
+## 일반적인 사용 원칙
+1. **날짜 형식**: YYYYMMDDHHMM (예: "202409151430") 또는 YYYYMMDD
+2. **페이징**: num_rows는 5-10개 권장 (컨텍스트 보호)
+3. **검색 범위**: 너무 넓은 범위보다는 적절한 필터 사용 권장
+4. **결과 없음**: 파라미터 조합이 잘못되었을 가능성, 더 넓은 조건으로 재시도
+"""
+
+
+@mcp.resource("guide://parameter-value-examples")
+def parameter_value_examples() -> str:
+    """정부조달 API 파라미터별 실제 사용 가능한 값들의 예시.
+
+    각 파라미터에 입력할 수 있는 구체적인 값들과 형식을 제공합니다.
+    """
+    return """
+# 정부조달 API 파라미터 값 예시
+
+## 코드값 참조
+
+### 업무구분코드 (business_div_code)
+- "1": 물품 (가장 많이 사용됨)
+- "2": 외자
+- "3": 공사
+- "5": 용역
+
+### 기관구분코드 (institution_div_code)
+- "1": 계약기관
+- "2": 수요기관
+
+### 조회구분 (inquiry_div)
+- "1": 전체
+- "2": 신규등록
+- "3": 변경등록
+
+## 날짜 형식 예시
+
+### YYYYMMDDHHMM 형식 (시분까지)
+- "202409151430": 2024년 9월 15일 14시 30분
+- "202401010000": 2024년 1월 1일 00시 00분
+- "202412312359": 2024년 12월 31일 23시 59분
+
+### YYYYMMDD 형식 (일자만)
+- "20240915": 2024년 9월 15일
+- "20240101": 2024년 1월 1일
+
+### YYYYMM 형식 (년월)
+- "202409": 2024년 9월
+- "202401": 2024년 1월
+
+### YYYY 형식 (연도)
+- "2024": 2024년
+- "2023": 2023년
+
+## 검색어 예시
+
+### 품명 검색 (product_name, prdctClsfcNoNm)
+- "컴퓨터": 컴퓨터 관련 제품
+- "프린터": 프린터 관련 제품
+- "사무용품": 사무용품 전반
+- "의료기기": 의료장비
+- "소프트웨어": SW 제품
+
+### 업체명 검색 (company_name, cntrctCorpNm)
+- "삼성전자": 삼성전자 관련 계약
+- "LG전자": LG전자 관련 계약
+- "현대": 현대 관련 계약 (현대자동차, 현대건설 등)
+- "대한": 대한 관련 기업들
+
+### 기관명 검색 (dminsttNm)
+- "교육부": 교육부 관련
+- "국방부": 국방부 관련
+- "행정안전부": 행안부 관련
+- "서울시": 서울특별시 관련
+
+## 일반적인 수치값
+
+### 페이지 관련
+- num_rows: 5, 10, 20 (권장: 5-10, 컨텍스트 보호)
+- page_no: 1, 2, 3... (1부터 시작)
+
+### 물품분류번호 (예시)
+- "432": 컴퓨터 관련 대분류
+- "44": 사무용품 관련 대분류
+- "453": 의료기기 관련 대분류
+
+## 자주 사용되는 조합
+
+### 최근 7일 입찰공고
+- bid_notice_start_date: "202409080000"
+- bid_notice_end_date: "202409152359"
+
+### 당해년도 통계
+- search_base_year: "2024"
+
+### 물품 관련 낙찰정보
+- business_div_code: "1"
+- opening_start_date: "202409010000"
+- opening_end_date: "202409152359"
+"""
+
+
+@mcp.resource("guide://common-search-patterns")
+def common_search_patterns() -> str:
+    """자주 사용되는 정부조달 검색 패턴과 최적화된 파라미터 조합.
+
+    실제 업무에서 많이 사용되는 검색 시나리오별 최적 파라미터 조합을 제공합니다.
+    """
+    return """
+# 자주 사용되는 정부조달 검색 패턴
+
+## 시간 기반 검색 패턴
+
+### 최근 공고/계약 조회
+```
+목적: 최근 일주일 입찰공고 확인
+API: call_public_data_standard_api
+필수: operation="getDataSetOpnStdBidPblancInfo"
+권장: bid_notice_start_date=(7일전), bid_notice_end_date=(현재)
+기본: num_rows=5
+```
+
+### 특정 기간 통계 조회
+```
+목적: 월별/연도별 조달 현황 파악
+API: call_procurement_statistics_api
+필수: operation="getTotlPubPrcrmntSttus"
+필수: search_base_year="2024"
+```
+
+## 업종별 검색 패턴
+
+### IT/컴퓨터 관련 조회
+```
+1단계: 분류 확인
+API: call_product_list_api
+operation="getPrdctClsfcNoUnit2Info" (대분류부터)
+
+2단계: 실제 계약 조회
+API: call_shopping_mall_api
+operation="getMASCntrctPrdctInfoList"
+권장: product_name="컴퓨터" 또는 "소프트웨어"
+```
+
+### 공사/건설 관련 조회
+```
+API: call_public_data_standard_api
+operation="getDataSetOpnStdScsbidInfo" (낙찰정보)
+필수: business_div_code="3" (공사)
+권장: 날짜 범위 설정
+```
+
+## 기업 분석 패턴
+
+### 특정 기업 계약 현황 조회
+```
+1단계: 기업명으로 계약품목 검색
+API: call_shopping_mall_api
+operation="getMASCntrctPrdctInfoList"
+핵심: company_name="삼성전자" (정확한 업체명)
+
+2단계: 상세 계약정보 확인 (필요시)
+API: call_public_data_standard_api
+operation="getDataSetOpnStdCntrctInfo"
+```
+
+### 경쟁업체 분석
+```
+API: call_shopping_mall_api
+operation="getMASCntrctPrdctInfoList"
+전략: product_name 동일하게 설정하여 경쟁업체 파악
+```
+
+## 기관별 분석 패턴
+
+### 특정 기관 조달 현황
+```
+API: call_procurement_statistics_api
+operation="getDminsttAccotEntrprsDivAccotArslt" (수요기관별 실적)
+권장: search_base_year="2024"
+선택: demand_institution_name="교육부" (기관명 검색)
+```
+
+### 지역별 조달 현황
+```
+API: call_procurement_statistics_api
+operation="getRgnLmtSttus" (지역제한 현황)
+필수: search_base_year="2024"
+```
+
+## 효율적인 검색 전략
+
+### 점진적 범위 축소 전략
+```
+1단계: 넓은 범위로 시작
+- 연도별 또는 월별 통계로 전체 규모 파악
+
+2단계: 카테고리 필터링
+- 업무구분(물품/공사/용역) 또는 품목분류로 범위 축소
+
+3단계: 세부 조건 적용
+- 기업명, 기관명, 구체적 날짜 범위로 정밀 검색
+```
+
+### 결과 없을 때 대응 전략
+```
+1. 날짜 범위 확대 (7일 → 30일 → 90일)
+2. 검색어 단순화 ("삼성전자주식회사" → "삼성전자" → "삼성")
+3. 상위 분류로 확대 (세부품목 → 대분류)
+4. 필터 조건 완화 (업무구분 제거, 기관 제한 해제)
+```
+
+## 페이징 최적화 패턴
+
+### 탐색 단계별 페이지 크기
+```
+1단계 (개요 파악): num_rows=3~5
+2단계 (상세 확인): num_rows=10~20
+3단계 (전수 조사): pagination_support 도구 활용
+```
+
+### 대용량 데이터 처리
+```
+API: call_api_with_pagination_support
+전략: 작은 페이지 크기로 시작하여 패턴 파악 후 확대
+```
+"""
+
+@mcp.prompt()
+def real_world_query_examples() -> str:
+    """실제 정부조달 데이터 분석 시나리오별 쿼리 예제"""
+    return """
+# 실제 정부조달 데이터 분석 쿼리 예제
+
+## 1. 사업 기회 탐색 시나리오
+
+### 시나리오 1: IT 장비 공급업체 신규 진입
+```python
+# 1단계: 최근 IT 관련 입찰공고 파악
+get_recent_bid_announcements(
+    business_type="물품",  # 물품 카테고리
+    days_back=30,         # 최근 한달
+    num_rows=10
+)
+
+# 2단계: IT 분야 낙찰 현황 및 가격대 조사
+get_successful_bids_by_business(
+    business_type="물품",
+    days_back=90,
+    num_rows=15
+)
+
+# 3단계: 쇼핑몰에서 컴퓨터 관련 제품 현황 확인
+search_shopping_mall_products(
+    product_name="컴퓨터",
+    num_rows=10
+)
+```
+
+### 시나리오 2: 특정 지역 공사업체 시장 분석
+```python
+# 1단계: 공사 분야 전반적 시장 규모 파악
+get_procurement_statistics_by_year(
+    year="2024",
+    num_rows=20
+)
+
+# 2단계: 최근 공사 입찰공고 동향
+get_recent_bid_announcements(
+    business_type="공사",
+    days_back=60,
+    num_rows=15
+)
+
+# 3단계: 공사 분야 실제 낙찰 결과 분석
+get_successful_bids_by_business(
+    business_type="공사",
+    days_back=180,
+    num_rows=20
+)
+```
+
+## 2. 경쟁 분석 시나리오
+
+### 시나리오 3: 특정 업체 계약 실적 추적
+```python
+# 1단계: 쇼핑몰에서 특정 업체 제품 확인
+search_shopping_mall_products(
+    company_name="삼성전자",
+    num_rows=15
+)
+
+# 2단계: 해당 업체 관련 낙찰 정보 조회 (간접적)
+# (업체명으로 직접 검색은 제한적이므로 카테고리 기반 접근)
+get_successful_bids_by_business(
+    business_type="물품",
+    days_back=180,
+    num_rows=30
+)
+```
+
+### 시나리오 4: 가격 경쟁력 분석
+```python
+# 1단계: 특정 품목의 MAS 계약 현황
+search_shopping_mall_products(
+    product_name="프린터",
+    num_rows=20
+)
+
+# 2단계: 동일 품목 입찰 공고 현황
+get_recent_bid_announcements(
+    business_type="물품",
+    days_back=90,
+    num_rows=20
+)
+
+# 3단계: 실제 낙찰가격 범위 파악
+get_successful_bids_by_business(
+    business_type="물품",
+    days_back=120,
+    num_rows=25
+)
+```
+
+## 3. 시장 트렌드 분석 시나리오
+
+### 시나리오 5: 연도별 조달 시장 변화 추이
+```python
+# 1단계: 2023년 통계
+get_procurement_statistics_by_year(
+    year="2023",
+    num_rows=30
+)
+
+# 2단계: 2024년 통계 비교
+get_procurement_statistics_by_year(
+    year="2024",
+    num_rows=30
+)
+
+# 3단계: 최근 실제 계약 동향으로 검증
+get_successful_bids_by_business(
+    business_type="물품",
+    days_back=60,
+    num_rows=20
+)
+```
+
+### 시나리오 6: 특정 분야 계절성 분석
+```python
+# 1단계: 현재 시점 입찰 현황
+get_recent_bid_announcements(
+    business_type="용역",
+    days_back=30,
+    num_rows=15
+)
+
+# 2단계: 3개월 전 동일 기간과 비교
+get_successful_bids_by_business(
+    business_type="용역",
+    days_back=120,
+    num_rows=25
+)
+
+# 3단계: 연간 통계로 전체 맥락 파악
+get_procurement_statistics_by_year(
+    year="2024",
+    num_rows=20
+)
+```
+
+## 4. 리스크 관리 시나리오
+
+### 시나리오 7: 시장 포화도 분석
+```python
+# 1단계: 특정 분야 전체 공급업체 현황
+search_shopping_mall_products(
+    product_name="사무용품",
+    num_rows=30
+)
+
+# 2단계: 해당 분야 입찰 경쟁 현황
+get_recent_bid_announcements(
+    business_type="물품",
+    days_back=45,
+    num_rows=20
+)
+
+# 3단계: 실제 낙찰률 및 경쟁강도 파악
+get_successful_bids_by_business(
+    business_type="물품",
+    days_back=90,
+    num_rows=25
+)
+```
+
+## 5. 전략 수립 시나리오
+
+### 시나리오 8: 신제품 출시 타이밍 분석
+```python
+# 1단계: 기존 유사 제품 계약 현황
+search_shopping_mall_products(
+    product_name="네트워크장비",
+    num_rows=20
+)
+
+# 2단계: 관련 분야 최근 입찰 빈도
+get_recent_bid_announcements(
+    business_type="물품",
+    days_back=60,
+    num_rows=25
+)
+
+# 3단계: 시장 규모 및 성장성 판단
+get_procurement_statistics_by_year(
+    year="2024",
+    num_rows=25
+)
+```
+
+## 6. 매개변수 최적화 팁
+
+### 효율적인 탐색 전략
+1. **처음엔 작게 시작**: num_rows=5-10으로 전체 패턴 파악
+2. **점진적 확장**: 필요시 num_rows 증가 및 기간 확장
+3. **교차 검증**: 여러 API 결과를 조합하여 신뢰성 확보
+
+### 컨텍스트 보호 활용
+1. **자동 압축 기능**: 대용량 결과는 자동으로 핵심 정보만 추출
+2. **페이징 가이드**: 더 많은 데이터 필요시 안내 메시지 활용
+3. **키 필드 집중**: 입찰번호, 계약금액 등 핵심 정보 우선 확인
+
+### 실무 활용 노하우
+1. **코드 변환 자동화**: 한글 입력시 자동 코드 매핑 활용
+2. **날짜 계산 자동화**: days_back 파라미터로 간편한 기간 설정
+3. **결과 해석**: 빈 결과시 조건 완화, 과다 결과시 필터 강화
+"""
 
 
 def main():
