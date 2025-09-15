@@ -56,9 +56,9 @@ USER naramarket
 # Set dynamic port handling for smithery.ai
 ENV FASTMCP_PORT=${PORT:-8000}
 
-# Health check for MCP server with improved error handling
+# Health check for MCP server (simplified for compatibility)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f --max-time 5 http://localhost:${FASTMCP_PORT}/mcp || exit 1
+    CMD curl -f --max-time 5 http://localhost:${FASTMCP_PORT}/ || exit 1
 
 # Expose port (will be set by smithery.ai via PORT env var)
 EXPOSE ${FASTMCP_PORT}

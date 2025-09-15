@@ -1,24 +1,26 @@
 openapi: 3.0.0
 info:
-  title: "Public Data Portal (data.go.kr) API"
-  description: "공공데이터포털에서 제공하는 나라장터 관련 API 명세를 OpenAPI 3.0 표준에 맞게 변환한 문서입니다."
-  version: "1.0.0"
+  title: "Korean Government Procurement APIs (Complete)"
+  description: "Complete OpenAPI specification for all Korean government procurement APIs - 38 operations across 4 services: 공공데이터개방표준서비스(3), 공공조달통계정보서비스(14), 물품목록정보서비스(12), 종합쇼핑몰품목정보서비스(9)"
+  version: "2.0.0"
 servers:
   - url: "http://apis.data.go.kr/1230000"
 tags:
-  - name: "나라장터 공공데이터개방표준서비스"
-    description: "PubDataOpnStdService: 입찰, 낙찰, 계약정보 데이터 제공"
+  - name: "공공데이터개방표준서비스"
+    description: "PubDataOpnStdService: 입찰공고, 낙찰, 계약정보 (3 operations)"
   - name: "공공조달통계정보서비스"
-    description: "PubPrcrmntStatInfoService: 공공조달 통계 정보 제공"
-  - name: "나라장터 종합쇼핑몰 품목정보 서비스"
-    description: "ShoppingMallPrdctInfoService: 종합쇼핑몰 품목, 계약, 납품 정보 제공"
+    description: "PubPrcrmntStatInfoService: 공공조달 통계정보 (14 operations)"
+  - name: "물품목록정보서비스"
+    description: "ThngListInfoService: 물품분류, 목록, 이력정보 (12 operations)"
+  - name: "종합쇼핑몰품목정보서비스"
+    description: "ShoppingMallPrdctInfoService: 계약품목, 납품, 조달정보 (9 operations)"
 
 paths:
+  # 공공데이터개방표준서비스 (3 operations)
   /ao/PubDataOpnStdService/getDataSetOpnStdBidPblancInfo:
     get:
-      tags:
-        - "나라장터 공공데이터개방표준서비스"
-      summary: "데이터셋 개방표준에 따른 입찰공고정보 조회"
+      tags: ["공공데이터개방표준서비스"]
+      summary: "입찰공고정보 조회"
       description: "검색조건을 입찰공고일시로 하여 나라장터에 등록된 입찰공고정보를 조회합니다."
       operationId: "getDataSetOpnStdBidPblancInfo"
       parameters:
@@ -42,11 +44,11 @@ paths:
             default: 1
         - name: "type"
           in: "query"
-          description: "응답 타입 (json 또는 xml)"
+          description: "응답 타입"
           schema:
             type: "string"
             enum: ["json", "xml"]
-            default: "xml"
+            default: "json"
         - name: "bidNtceBgnDt"
           in: "query"
           description: "입찰공고시작일시 (YYYYMMDDHHMM)"
@@ -63,53 +65,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BidPblancInfoResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/BidPblancInfoResponse"
-        default:
-          description: "오류"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ApiResponse"
 
   /ao/PubDataOpnStdService/getDataSetOpnStdScsbidInfo:
     get:
-      tags:
-        - "나라장터 공공데이터개방표준서비스"
-      summary: "데이터셋 개방표준에 따른 낙찰정보 조회"
+      tags: ["공공데이터개방표준서비스"]
+      summary: "낙찰정보 조회"
       description: "검색조건을 개찰일시, 업무구분명으로 나라장터에 등록된 낙찰정보를 조회합니다."
       operationId: "getDataSetOpnStdScsbidInfo"
       parameters:
-        - name: "ServiceKey"
-          in: "query"
-          description: "공공데이터포털에서 받은 인증키"
-          required: true
-          schema:
-            type: "string"
-        - name: "numOfRows"
-          in: "query"
-          description: "한 페이지 결과 수"
-          schema:
-            type: "integer"
-            default: 10
-        - name: "pageNo"
-          in: "query"
-          description: "페이지 번호"
-          schema:
-            type: "integer"
-            default: 1
-        - name: "type"
-          in: "query"
-          description: "응답 타입 (json 또는 xml)"
-          schema:
-            type: "string"
-            enum: ["json", "xml"]
-            default: "xml"
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
         - name: "bsnsDivCd"
           in: "query"
           description: "업무구분코드 (1:물품, 2:외자, 3:공사, 5:용역)"
@@ -132,55 +100,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ScsbidInfoResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/ScsbidInfoResponse"
-        default:
-          description: "오류"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ApiResponse"
 
   /ao/PubDataOpnStdService/getDataSetOpnStdCntrctInfo:
     get:
-      tags:
-        - "나라장터 공공데이터개방표준서비스"
-      summary: "데이터셋 개방표준에 따른 계약정보 조회"
+      tags: ["공공데이터개방표준서비스"]
+      summary: "계약정보 조회"
       description: "검색조건을 계약체결일자로 나라장터에 등록된 계약정보를 조회합니다."
       operationId: "getDataSetOpnStdCntrctInfo"
       parameters:
-        - name: "ServiceKey"
-          in: "query"
-          description: "공공데이터포털에서 받은 인증키"
-          required: true
-          schema:
-            type: "string"
-        - name: "numOfRows"
-          in: "query"
-          description: "한 페이지 결과 수"
-          required: true
-          schema:
-            type: "integer"
-            default: 10
-        - name: "pageNo"
-          in: "query"
-          description: "페이지 번호"
-          required: true
-          schema:
-            type: "integer"
-            default: 1
-        - name: "type"
-          in: "query"
-          description: "응답 타입 (json 또는 xml)"
-          schema:
-            type: "string"
-            enum: ["json", "xml"]
-            default: "xml"
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
         - name: "cntrctCnclsBgnDate"
           in: "query"
           description: "계약체결시작일자 (YYYYMMDD)"
@@ -207,50 +139,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CntrctInfoResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/CntrctInfoResponse"
-        default:
-          description: "오류"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ApiResponse"
 
+  # 공공조달통계정보서비스 (14 operations)
   /at/PubPrcrmntStatInfoService/getTotlPubPrcrmntSttus:
     get:
-      tags:
-        - "공공조달통계정보서비스"
+      tags: ["공공조달통계정보서비스"]
       summary: "전체 공공조달 현황"
-      operationId: getTotlPubPrcrmntSttus
+      operationId: "getTotlPubPrcrmntSttus"
       parameters:
-        - name: "ServiceKey"
-          in: "query"
-          description: "공공데이터포털에서 받은 인증키"
-          required: true
-          schema:
-            type: "string"
-        - name: "numOfRows"
-          in: "query"
-          description: "한 페이지 결과 수"
-          required: true
-          schema:
-            type: "integer"
-        - name: "pageNo"
-          in: "query"
-          description: "페이지 번호"
-          required: true
-          schema:
-            type: "integer"
-        - name: "type"
-          in: "query"
-          description: "응답 타입 (json 또는 xml)"
-          schema:
-            type: "string"
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
         - name: "srchBssYear"
           in: "query"
           description: "검색기준년도 (YYYY)"
@@ -258,62 +159,579 @@ paths:
             type: "string"
       responses:
         '200':
-          description: "Successful operation"
+          description: "성공"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TotlPubPrcrmntSttusResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/TotlPubPrcrmntSttusResponse"
-        default:
-          description: "오류"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ApiResponse"
 
+  /at/PubPrcrmntStatInfoService/getInsttDivAccotPrcrmntSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "기관구분별 조달 현황"
+      operationId: "getInsttDivAccotPrcrmntSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getEntrprsDivAccotPrcrmntSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "기업구분별 조달 현황"
+      operationId: "getEntrprsDivAccotPrcrmntSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getCntrctMthdAccotSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "계약방법별 현황"
+      operationId: "getCntrctMthdAccotSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getRgnLmtSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "지역제한 현황"
+      operationId: "getRgnLmtSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getRgnDutyCmmnCntrctSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "지역의무공동계약 현황"
+      operationId: "getRgnDutyCmmnCntrctSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getPrcrmntObjectBsnsObjAccotSttus:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "조달목적물(업무대상)별 현황"
+      operationId: "getPrcrmntObjectBsnsObjAccotSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getDminsttAccotEntrprsDivAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "수요기관별 기업구분별 실적"
+      operationId: "getDminsttAccotEntrprsDivAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - $ref: "#/components/parameters/DemandInstitutionCode"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getDminsttAccotCntrctMthdAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "수요기관별 계약방법별 실적"
+      operationId: "getDminsttAccotCntrctMthdAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - $ref: "#/components/parameters/DemandInstitutionCode"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getDminsttAccotBsnsObjAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "수요기관별 업무대상별 실적"
+      operationId: "getDminsttAccotBsnsObjAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - $ref: "#/components/parameters/DemandInstitutionCode"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getDminsttAccotSystmTyAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "수요기관별 시스템유형별 실적"
+      operationId: "getDminsttAccotSystmTyAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - $ref: "#/components/parameters/DemandInstitutionCode"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getPrcrmntEntrprsAccotCntrctMthdAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "조달기업별 계약방법별 실적"
+      operationId: "getPrcrmntEntrprsAccotCntrctMthdAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - name: "corpUntyNo"
+          in: "query"
+          description: "업체통합번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getPrcrmntEntrprsAccotBsnsObjAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "조달기업별 업무대상별 실적"
+      operationId: "getPrcrmntEntrprsAccotBsnsObjAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - name: "corpUntyNo"
+          in: "query"
+          description: "업체통합번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/PubPrcrmntStatInfoService/getPrdctIdntNoServcAccotArslt:
+    get:
+      tags: ["공공조달통계정보서비스"]
+      summary: "품목 및 서비스별 실적"
+      operationId: "getPrdctIdntNoServcAccotArslt"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - $ref: "#/components/parameters/SearchBaseYear"
+        - name: "prdctClsfcNo"
+          in: "query"
+          description: "물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # 물품목록정보서비스 (12 operations)
+  /ao/ThngListInfoService/getThngGuidanceMapInfo:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품안내지도 조회"
+      operationId: "getThngGuidanceMapInfo"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoPrdlstSearch:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "품목 목록 조회"
+      operationId: "getThngPrdnmLocplcAccotListInfoInfoPrdlstSearch"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "prdctClsfcNo"
+          in: "query"
+          description: "물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoPrdnmSearch:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "품명 목록 조회"
+      operationId: "getThngPrdnmLocplcAccotListInfoInfoPrdnmSearch"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "prdctClsfcNoNm"
+          in: "query"
+          description: "품명"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getThngPrdnmLocplcAccotListInfoInfoLocplcSearch:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "소재지 목록 조회"
+      operationId: "getThngPrdnmLocplcAccotListInfoInfoLocplcSearch"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "rgnCd"
+          in: "query"
+          description: "지역코드"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getThngListClChangeHistInfo:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "분류변경이력 조회"
+      operationId: "getThngListClChangeHistInfo"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryBgnDt"
+          in: "query"
+          description: "조회시작일시 (YYYYMMDDHHMM)"
+          schema:
+            type: "string"
+        - name: "inqryEndDt"
+          in: "query"
+          description: "조회종료일시 (YYYYMMDDHHMM)"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getLsfgdNdPrdlstChghstlnfoSttus:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "품목변경이력 조회"
+      operationId: "getLsfgdNdPrdlstChghstlnfoSttus"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "chgPrdBgnDt"
+          in: "query"
+          description: "변경기간 시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "chgPrdEndDt"
+          in: "query"
+          description: "변경기간 종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoUnit2Info:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류2단위 내역조회"
+      operationId: "getPrdctClsfcNoUnit2Info"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoUnit4Info:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류4단위 내역조회"
+      operationId: "getPrdctClsfcNoUnit4Info"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "upPrdctClsfcNo"
+          in: "query"
+          description: "상위 물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoUnit6Info:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류6단위 내역조회"
+      operationId: "getPrdctClsfcNoUnit6Info"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "upPrdctClsfcNo"
+          in: "query"
+          description: "상위 물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoUnit8Info:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류8단위 내역조회"
+      operationId: "getPrdctClsfcNoUnit8Info"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "upPrdctClsfcNo"
+          in: "query"
+          description: "상위 물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoUnit10Info:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류10단위 내역조회"
+      operationId: "getPrdctClsfcNoUnit10Info"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "upPrdctClsfcNo"
+          in: "query"
+          description: "상위 물품분류번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /ao/ThngListInfoService/getPrdctClsfcNoChgHstry:
+    get:
+      tags: ["물품목록정보서비스"]
+      summary: "물품분류변경 이력조회"
+      operationId: "getPrdctClsfcNoChgHstry"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "chgPrdBgnDt"
+          in: "query"
+          description: "변경기간 시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "chgPrdEndDt"
+          in: "query"
+          description: "변경기간 종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  # 종합쇼핑몰품목정보서비스 (9 operations)
   /at/ShoppingMallPrdctInfoService/getMASCntrctPrdctInfoList:
     get:
-      tags:
-        - "나라장터 종합쇼핑몰 품목정보 서비스"
+      tags: ["종합쇼핑몰품목정보서비스"]
       summary: "다수공급자계약 품목정보 조회"
-      operationId: getMASCntrctPrdctInfoList
+      operationId: "getMASCntrctPrdctInfoList"
       parameters:
-        - name: "ServiceKey"
-          in: "query"
-          description: "공공데이터포털에서 받은 인증키"
-          required: true
-          schema:
-            type: "string"
-        - name: "numOfRows"
-          in: "query"
-          description: "한 페이지 결과 수"
-          required: true
-          schema:
-            type: "integer"
-        - name: "pageNo"
-          in: "query"
-          description: "페이지 번호"
-          required: true
-          schema:
-            type: "integer"
-        - name: "type"
-          in: "query"
-          description: "응답 타입 (json 또는 xml)"
-          schema:
-            type: "string"
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
         - name: "rgstDtBgnDt"
           in: "query"
-          description: "등록일시 시작일시 (YYYYMMDDHH24M)"
+          description: "등록시작일시 (YYYYMMDDHH24M)"
           schema:
             type: "string"
         - name: "rgstDtEndDt"
           in: "query"
-          description: "등록일시 종료일시 (YYYYMMDDHH24M)"
+          description: "등록종료일시 (YYYYMMDDHH24M)"
           schema:
             type: "string"
         - name: "prdctClsfcNoNm"
@@ -331,42 +749,292 @@ paths:
           description: "계약업체명"
           schema:
             type: "string"
-        - name: "chgDtBgnDt"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getUcntrctPrdctInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "일반단가계약 품목정보 조회"
+      operationId: "getUcntrctPrdctInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "rgstDtBgnDt"
           in: "query"
-          description: "변경일시 시작일시 (YYYYMMDDHH24M)"
+          description: "등록시작일시 (YYYYMMDDHH24M)"
           schema:
             type: "string"
-        - name: "chgDtEndDt"
+        - name: "rgstDtEndDt"
           in: "query"
-          description: "변경일시 종료일시 (YYYYMMDDHH24M)"
-          schema:
-            type: "string"
-        - name: "prodctCertYn"
-          in: "query"
-          description: "제품인증여부 (Y/N)"
+          description: "등록종료일시 (YYYYMMDDHH24M)"
           schema:
             type: "string"
       responses:
         '200':
-          description: "Successful operation"
+          description: "성공"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MASCntrctPrdctInfoListResponse"
-            application/xml:
-              schema:
-                $ref: "#/components/schemas/MASCntrctPrdctInfoListResponse"
-        default:
-          description: "오류"
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getThptyUcntrctPrdctInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "제3자단가계약 품목정보 조회"
+      operationId: "getThptyUcntrctPrdctInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "rgstDtBgnDt"
+          in: "query"
+          description: "등록시작일시 (YYYYMMDDHH24M)"
+          schema:
+            type: "string"
+        - name: "rgstDtEndDt"
+          in: "query"
+          description: "등록종료일시 (YYYYMMDDHH24M)"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-            application/xml:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getDlvrReqInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "납품요구정보 현황 목록조회"
+      operationId: "getDlvrReqInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryBgnDate"
+          in: "query"
+          description: "조회시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "inqryEndDate"
+          in: "query"
+          description: "조회종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "dminsttNm"
+          in: "query"
+          description: "수요기관명"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getDlvrReqDtlInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "납품요구상세 현황 목록조회"
+      operationId: "getDlvrReqDtlInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "dlvrReqNo"
+          in: "query"
+          description: "납품요구번호"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getShoppingMallPrdctInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "종합쇼핑몰 품목 정보 목록 조회"
+      operationId: "getShoppingMallPrdctInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryPrdctDiv"
+          in: "query"
+          description: "조회상품구분"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getVntrPrdctOrderDealDtlsInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "벤처나라 물품 주문거래 내역 조회"
+      operationId: "getVntrPrdctOrderDealDtlsInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryBgnDate"
+          in: "query"
+          description: "조회시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "inqryEndDate"
+          in: "query"
+          description: "조회종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getSpcifyPrdlstPrcureInfoList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "특정품목조달내역 목록 조회"
+      operationId: "getSpcifyPrdlstPrcureInfoList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryBgnDate"
+          in: "query"
+          description: "조회시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "inqryEndDate"
+          in: "query"
+          description: "조회종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "prcrmntDiv"
+          in: "query"
+          description: "조달방식구분"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /at/ShoppingMallPrdctInfoService/getSpcifyPrdlstPrcureTotList:
+    get:
+      tags: ["종합쇼핑몰품목정보서비스"]
+      summary: "특정품목조달집계 목록 조회"
+      operationId: "getSpcifyPrdlstPrcureTotList"
+      parameters:
+        - $ref: "#/components/parameters/ServiceKey"
+        - $ref: "#/components/parameters/NumOfRows"
+        - $ref: "#/components/parameters/PageNo"
+        - $ref: "#/components/parameters/Type"
+        - name: "inqryBgnDate"
+          in: "query"
+          description: "조회시작일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "inqryEndDate"
+          in: "query"
+          description: "조회종료일자 (YYYYMMDD)"
+          schema:
+            type: "string"
+        - name: "prcrmntDiv"
+          in: "query"
+          description: "조달방식구분"
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "성공"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
 
 components:
+  parameters:
+    ServiceKey:
+      name: "ServiceKey"
+      in: "query"
+      description: "공공데이터포털에서 받은 인증키"
+      required: true
+      schema:
+        type: "string"
+
+    NumOfRows:
+      name: "numOfRows"
+      in: "query"
+      description: "한 페이지 결과 수"
+      schema:
+        type: "integer"
+        default: 10
+
+    PageNo:
+      name: "pageNo"
+      in: "query"
+      description: "페이지 번호"
+      schema:
+        type: "integer"
+        default: 1
+
+    Type:
+      name: "type"
+      in: "query"
+      description: "응답 타입"
+      schema:
+        type: "string"
+        enum: ["json", "xml"]
+        default: "json"
+
+    SearchBaseYear:
+      name: "srchBssYear"
+      in: "query"
+      description: "검색기준년도 (YYYY)"
+      schema:
+        type: "string"
+
+    DemandInstitutionCode:
+      name: "dminsttCd"
+      in: "query"
+      description: "수요기관코드"
+      schema:
+        type: "string"
+
   schemas:
     ApiResponseHeader:
       type: "object"
@@ -377,181 +1045,45 @@ components:
         resultMsg:
           type: "string"
           description: "결과메시지"
-    
-    ErrorResponse:
-      type: object
+
+    ApiResponse:
+      type: "object"
       properties:
         response:
-          type: object
+          type: "object"
           properties:
             header:
-              $ref: '#/components/schemas/ApiResponseHeader'
+              $ref: "#/components/schemas/ApiResponseHeader"
             body:
-              type: object
+              type: "object"
+              properties:
+                items:
+                  type: "array"
+                  items:
+                    type: "object"
+                    description: "API별 데이터 구조가 다름"
+                numOfRows:
+                  type: "integer"
+                pageNo:
+                  type: "integer"
+                totalCount:
+                  type: "integer"
+
+    ErrorResponse:
+      type: "object"
+      properties:
+        response:
+          type: "object"
+          properties:
+            header:
+              $ref: "#/components/schemas/ApiResponseHeader"
+            body:
+              type: "object"
               properties:
                 error:
-                  type: object
+                  type: "object"
                   properties:
                     code:
-                      type: string
+                      type: "string"
                     message:
-                      type: string
-
-    BidPblancInfoItem:
-      type: "object"
-      description: "입찰공고정보 항목"
-      properties:
-        bidNtceNo: { type: "string", description: "입찰공고번호" }
-        bidNtceOrd: { type: "string", description: "입찰공고차수" }
-        refNtceNo: { type: "string", description: "참조공고번호" }
-        ppsNtceYn: { type: "string", description: "나라장터공고여부" }
-        bidNtceNm: { type: "string", description: "입찰공고명" }
-        # ... all other fields from the response table
-        dataBssDate: { type: "string", format: "date", description: "데이터기준일자" }
-
-    BidPblancInfoResponse:
-      type: "object"
-      properties:
-        response:
-          type: "object"
-          properties:
-            header:
-              $ref: "#/components/schemas/ApiResponseHeader"
-            body:
-              type: "object"
-              properties:
-                items:
-                  type: "array"
-                  items:
-                    $ref: "#/components/schemas/BidPblancInfoItem"
-                numOfRows:
-                  type: "integer"
-                pageNo:
-                  type: "integer"
-                totalCount:
-                  type: "integer"
-
-    ScsbidInfoItem:
-      type: "object"
-      description: "낙찰정보 항목"
-      properties:
-        bidNtceNo: { type: "string", description: "입찰공고번호" }
-        bidNtceOrd: { type: "string", description: "입찰공고차수" }
-        # ... all other fields
-        dataBssDate: { type: "string", format: "date", description: "데이터기준일자" }
-
-    ScsbidInfoResponse:
-      type: "object"
-      properties:
-        response:
-          type: "object"
-          properties:
-            header:
-              $ref: "#/components/schemas/ApiResponseHeader"
-            body:
-              type: "object"
-              properties:
-                items:
-                  type: "array"
-                  items:
-                    $ref: "#/components/schemas/ScsbidInfoItem"
-                numOfRows:
-                  type: "integer"
-                pageNo:
-                  type: "integer"
-                totalCount:
-                  type: "integer"
-
-    CntrctInfoItem:
-      type: "object"
-      description: "계약정보 항목"
-      properties:
-        cntrctNo: { type: "string", description: "계약번호" }
-        untyCntrctNo: { type: "string", description: "통합계약번호" }
-        # ... all other fields
-        dataBssDate: { type: "string", format: "date", description: "데이터기준일자" }
-
-    CntrctInfoResponse:
-      type: "object"
-      properties:
-        response:
-          type: "object"
-          properties:
-            header:
-              $ref: "#/components/schemas/ApiResponseHeader"
-            body:
-              type: "object"
-              properties:
-                items:
-                  type: "array"
-                  items:
-                    $ref: "#/components/schemas/CntrctInfoItem"
-                numOfRows:
-                  type: "integer"
-                pageNo:
-                  type: "integer"
-                totalCount:
-                  type: "integer"
-
-    TotlPubPrcrmntSttusItem:
-      type: object
-      properties:
-        bssMnth: { type: string, description: "기준월" }
-        statDivNm: { type: string, description: "통계구분명" }
-        bssYearAmt: { type: number, description: "기준년도금액" }
-        bssYear1Amt: { type: number, description: "기준년도+1금액" }
-        bssYear2Amt: { type: number, description: "기준년도+2금액" }
-        bssYear3Amt: { type: number, description: "기준년도+3금액" }
-        bssYear4Amt: { type: number, description: "기준년도+4금액" }
-
-    TotlPubPrcrmntSttusResponse:
-      type: object
-      properties:
-        response:
-          type: object
-          properties:
-            header:
-              $ref: "#/components/schemas/ApiResponseHeader"
-            body:
-              type: object
-              properties:
-                items:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/TotlPubPrcrmntSttusItem"
-                numOfRows:
-                  type: integer
-                pageNo:
-                  type: integer
-                totalCount:
-                  type: integer
-
-    MASCntrctPrdctInfoItem:
-      type: object
-      properties:
-        prdctImgUrl: { type: string, description: "상품이미지URL" }
-        cntrctCorpNm: { type: string, description: "계약업체명" }
-        # ... all other fields
-        chgDt: { type: string, description: "변경일시" }
-
-    MASCntrctPrdctInfoListResponse:
-      type: object
-      properties:
-        response:
-          type: object
-          properties:
-            header:
-              $ref: "#/components/schemas/ApiResponseHeader"
-            body:
-              type: object
-              properties:
-                items:
-                  type: array
-                  items:
-                    $ref: "#/components/schemas/MASCntrctPrdctInfoItem"
-                numOfRows:
-                  type: integer
-                pageNo:
-                  type: integer
-                totalCount:
-                  type: integer
+                      type: "string"
