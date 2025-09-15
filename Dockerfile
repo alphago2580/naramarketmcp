@@ -33,7 +33,7 @@ COPY . .
 RUN chown -R naramarket:naramarket /app
 USER naramarket
 
-CMD ["python", "src/main.py"]
+CMD ["python", "-m", "src.main"]
 
 # Production stage
 FROM base as production
@@ -64,4 +64,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE ${FASTMCP_PORT}
 
 # Default command for MCP server (smithery.ai compatible)
-CMD ["python", "src/main.py"]
+CMD ["python", "-m", "src.main"]
