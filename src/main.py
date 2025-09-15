@@ -1155,6 +1155,20 @@ API: call_api_with_pagination_support
 ```
 """
 
+# Health check and server info endpoints for Smithery.ai deployment
+@mcp.tool()
+def health_check() -> Dict[str, Any]:
+    """Health check endpoint for deployment monitoring."""
+    return {
+        "status": "healthy",
+        "server": APP_NAME,
+        "version": "2.0",
+        "transport": "HTTP/SSE",
+        "cors": "enabled",
+        "tools_available": True,
+        "deployment": "smithery_ready"
+    }
+
 @mcp.prompt()
 def real_world_query_examples() -> str:
     """실제 정부조달 데이터 분석 시나리오별 쿼리 예제"""
