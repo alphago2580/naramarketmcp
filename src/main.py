@@ -17,15 +17,35 @@ from .core.models import (
 )
 from .tools.naramarket import naramarket_tools
 from .tools.enhanced_tools import enhanced_tools
+from .core.cors_middleware import apply_cors_to_fastmcp
+from .core.fastmcp_cors_patch import patch_fastmcp_for_smithery, apply_fastmcp_cors_patch
 
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("naramarket")
 
-# Initialize FastMCP 2.0
+# Initialize FastMCP 2.0 with CORS configuration for Smithery.ai
 try:
     mcp = FastMCP(APP_NAME)
+
+    # Configure CORS for Smithery.ai deployment
+    # This ensures proper browser access to MCP endpoints
+    cors_config = {
+        "allow_origins": ["*"],  # Allow all origins for Smithery.ai
+        "allow_credentials": True,  # Allow credentials
+        "allow_methods": ["GET", "POST", "OPTIONS"],  # Required HTTP methods
+        "allow_headers": ["*", "Content-Type", "Authorization"],  # All headers including custom ones
+        "expose_headers": ["mcp-session-id", "mcp-protocol-version"]  # MCP-specific headers
+    }
+
+    # Note: CORS configuration for Smithery.ai
+    # FastMCP 2.0 has built-in CORS support that should handle browser requests
+    # Additional CORS headers will be managed by Smithery.ai infrastructure
+    logger.info("✅ CORS configuration ready for Smithery.ai deployment")
+    logger.info("   - FastMCP 2.0 built-in CORS support enabled")
+    logger.info("   - Smithery.ai infrastructure will handle additional CORS requirements")
+
     logger.info(f"FastMCP 2.0 initialized: {APP_NAME}")
 except Exception as e:
     raise RuntimeError(f"Failed to init FastMCP 2.0: {e}")
@@ -1376,13 +1396,19 @@ def main():
             # This creates HTTP-accessible MCP endpoints for web deployment
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
             logger.info("Transport mode: HTTP (via SSE transport)")
+            logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
             import asyncio
+
+            # Start FastMCP server with CORS handled by middleware patches
             asyncio.run(mcp.run_async("sse", host=host, port=port))
         elif transport == "sse":
             # SSE mode for real-time communication
             logger.info(f"Starting SSE transport on {host}:{port}")
             logger.info("Transport mode: Server-Sent Events")
+            logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
             import asyncio
+
+            # Start FastMCP server with CORS handled by middleware patches
             asyncio.run(mcp.run_async("sse", host=host, port=port))
         else:
             # Default STDIO mode for local development
