@@ -51,11 +51,8 @@ except Exception as e:
     raise RuntimeError(f"Failed to init FastMCP 2.0: {e}")
 
 
-# Register MCP Tools with proper FastMCP 2.0 schema compliance
-@mcp.tool(
-    name="crawl_list",
-    description="Fetch product list for a category from Nara Market API"
-)
+# Register MCP Tools
+@mcp.tool()
 def crawl_list(
     category: str,
     page_no: int = 1,
@@ -63,7 +60,7 @@ def crawl_list(
     days_back: int = 7,
     inqry_bgn_date: Optional[str] = None,
     inqry_end_date: Optional[str] = None,
-) -> dict:
+) -> CrawlListResult:
     """Fetch product list for a category from Nara Market API.
     
     Args:
@@ -87,11 +84,8 @@ def crawl_list(
     )
 
 
-@mcp.tool(
-    name="get_detailed_attributes",
-    description="Get detailed product attributes from G2B API"
-)
-def get_detailed_attributes(api_item: dict) -> dict:
+@mcp.tool()
+def get_detailed_attributes(api_item: Dict[str, Any]) -> DetailResult:
     """Get detailed product attributes from G2B API.
     
     Args:
@@ -103,11 +97,8 @@ def get_detailed_attributes(api_item: dict) -> dict:
     return naramarket_tools.get_detailed_attributes(api_item)
 
 
-@mcp.tool(
-    name="server_info",
-    description="Get server status and available tools list"
-)
-def server_info() -> dict:
+@mcp.tool()
+def server_info() -> ServerInfo:
     """Get server status and available tools list.
 
     Returns:
@@ -117,10 +108,7 @@ def server_info() -> dict:
 
 
 # Enhanced Korean Government Procurement APIs (Parameterized)
-@mcp.tool(
-    name="call_public_data_standard_api",
-    description="공공데이터개방표준서비스 API 호출 (Enhanced parameterized)"
-)
+@mcp.tool()
 def call_public_data_standard_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -134,7 +122,7 @@ def call_public_data_standard_api(
     contract_end_date: Optional[str] = None,
     institution_div_code: Optional[str] = None,
     institution_code: Optional[str] = None
-) -> dict:
+) -> Dict[str, Any]:
     """공공데이터개방표준서비스 API 호출 (Enhanced parameterized).
 
     Available operations:
@@ -178,10 +166,7 @@ def call_public_data_standard_api(
     )
 
 
-@mcp.tool(
-    name="call_procurement_statistics_api",
-    description="공공조달통계정보서비스 API 호출 (Enhanced parameterized)"
-)
+@mcp.tool()
 def call_procurement_statistics_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -197,7 +182,7 @@ def call_procurement_statistics_api(
     product_classification_name: Optional[str] = None,
     lower_institution_result_inclusion: Optional[str] = None,
     link_system_code: Optional[str] = None
-) -> dict:
+) -> Dict[str, Any]:
     """공공조달통계정보서비스 API 호출 (Enhanced parameterized).
 
     Available operations (14개):
@@ -256,10 +241,7 @@ def call_procurement_statistics_api(
     )
 
 
-@mcp.tool(
-    name="call_product_list_api",
-    description="조달청 물품목록정보서비스 API 호출 (Enhanced parameterized)"
-)
+@mcp.tool()
 def call_product_list_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -278,7 +260,7 @@ def call_product_list_api(
     inquiry_end_date: Optional[str] = None,
     change_period_start_date: Optional[str] = None,
     change_period_end_date: Optional[str] = None
-) -> dict:
+) -> Dict[str, Any]:
     """조달청 물품목록정보서비스 API 호출 (Enhanced parameterized).
 
     Available operations (12개):
@@ -341,10 +323,7 @@ def call_product_list_api(
     )
 
 
-@mcp.tool(
-    name="call_shopping_mall_api",
-    description="나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized)"
-)
+@mcp.tool()
 def call_shopping_mall_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -371,7 +350,7 @@ def call_shopping_mall_api(
     delivery_request_no: Optional[str] = None,
     inquiry_product_div: Optional[str] = None,
     procurement_div: Optional[str] = None
-) -> dict:
+) -> Dict[str, Any]:
     """나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized).
 
     Available operations (9개):
@@ -447,11 +426,8 @@ def call_shopping_mall_api(
     )
 
 
-@mcp.tool(
-    name="get_all_api_services_info",
-    description="모든 API 서비스 정보 조회 (Enhanced)"
-)
-def get_all_api_services_info() -> dict:
+@mcp.tool()
+def get_all_api_services_info() -> Dict[str, Any]:
     """모든 API 서비스 정보 조회 (Enhanced).
 
     Returns:
@@ -460,11 +436,8 @@ def get_all_api_services_info() -> dict:
     return enhanced_tools.get_all_api_services_info()
 
 
-@mcp.tool(
-    name="get_api_operations",
-    description="특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced)"
-)
-def get_api_operations(service_type: str) -> dict:
+@mcp.tool()
+def get_api_operations(service_type: str) -> Dict[str, Any]:
     """특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced).
 
     Args:
@@ -476,10 +449,7 @@ def get_api_operations(service_type: str) -> dict:
     return enhanced_tools.get_api_operations(service_type)
 
 
-@mcp.tool(
-    name="call_api_with_pagination_support",
-    description="페이징 지원 API 호출 (리모트 서버 환경 최적화)"
-)
+@mcp.tool()
 def call_api_with_pagination_support(
     service_type: str,
     operation: str,
@@ -497,7 +467,7 @@ def call_api_with_pagination_support(
     business_type: Optional[str] = None,
     company_name: Optional[str] = None,
     product_name: Optional[str] = None
-) -> dict:
+) -> Dict[str, Any]:
     """페이징 지원 API 호출 (리모트 서버 환경 최적화).
 
     이 도구는 리모트 서버 환경에서 많은 데이터를 효율적으로 탐색할 때 사용하세요.
@@ -553,15 +523,12 @@ def call_api_with_pagination_support(
     )
 
 
-@mcp.tool(
-    name="get_data_exploration_guide",
-    description="데이터 탐색을 위한 최적화된 매개변수 가이드 제공"
-)
+@mcp.tool()
 def get_data_exploration_guide(
     service_type: str,
     operation: str,
     expected_data_size: str = "medium"
-) -> dict:
+) -> Dict[str, Any]:
     """데이터 탐색을 위한 최적화된 매개변수 가이드 제공.
 
     리모트 서버 환경에서 효율적인 데이터 탐색을 위한 권장 설정을 제공합니다.
@@ -605,14 +572,11 @@ def get_data_exploration_guide(
 
 
 # AI-Friendly Simplified Tools (자주 사용되는 기능들)
-@mcp.tool(
-    name="get_recent_bid_announcements",
-    description="최근 입찰공고 조회 (AI 친화적 단순 도구)"
-)
+@mcp.tool()
 def get_recent_bid_announcements(
     num_rows: int = 5,
     days_back: int = 7
-) -> dict:
+) -> Dict[str, Any]:
     """최근 입찰공고 조회 (AI 친화적 단순 도구).
 
     가장 자주 사용되는 입찰공고 조회 기능을 단순화했습니다.
@@ -639,15 +603,12 @@ def get_recent_bid_announcements(
     )
 
 
-@mcp.tool(
-    name="get_successful_bids_by_business_type",
-    description="업무구분별 낙찰정보 조회 (AI 친화적 단순 도구)"
-)
+@mcp.tool()
 def get_successful_bids_by_business_type(
     business_type: str,
     num_rows: int = 5,
     days_back: int = 30
-) -> dict:
+) -> Dict[str, Any]:
     """업무구분별 낙찰정보 조회 (AI 친화적 단순 도구).
 
     Args:
@@ -763,14 +724,11 @@ def workflow_guide() -> str:
 4. 미래 시장 기회 및 위험 요소 식별
 """
 
-@mcp.tool(
-    name="get_procurement_statistics_by_year",
-    description="연도별 공공조달 통계 조회 (AI 친화적 단순 도구)"
-)
+@mcp.tool()
 def get_procurement_statistics_by_year(
     year: str,
     num_rows: int = 10
-) -> dict:
+) -> Dict[str, Any]:
     """연도별 공공조달 통계 조회 (AI 친화적 단순 도구).
 
     Args:
@@ -924,15 +882,12 @@ YYYYMM: 년월 (월별 조회시)
 **해결**: 코드 매핑 테이블 참조 또는 유효 값 조회 먼저 실행
 """
 
-@mcp.tool(
-    name="search_shopping_mall_products",
-    description="나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구)"
-)
+@mcp.tool()
 def search_shopping_mall_products(
     product_name: Optional[str] = None,
     company_name: Optional[str] = None,
     num_rows: int = 5
-) -> dict:
+) -> Dict[str, Any]:
     """나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구).
 
     Args:
@@ -1239,11 +1194,8 @@ API: call_api_with_pagination_support
 """
 
 # Health check and server info endpoints for Smithery.ai deployment
-@mcp.tool(
-    name="health_check",
-    description="Health check endpoint for deployment monitoring"
-)
-def health_check() -> dict:
+@mcp.tool()
+def health_check() -> Dict[str, Any]:
     """Health check endpoint for deployment monitoring."""
     return {
         "status": "healthy",
@@ -1491,177 +1443,15 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment with OAuth discovery endpoints
+            # HTTP mode for smithery.ai deployment - direct SSE with Smithery routing
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (Full MCP + OAuth compliance)")
+            logger.info("Transport mode: HTTP (Direct SSE - let Smithery handle /mcp routing)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
 
-            import uvicorn
-            import base64
-            import json
-            from urllib.parse import unquote
-            from starlette.applications import Starlette
-            from starlette.routing import Route, Mount
-            from starlette.middleware.cors import CORSMiddleware
-            from starlette.responses import JSONResponse
-            from starlette.requests import Request
-
-            # Create HTTP app for MCP functionality (updated from deprecated sse_app)
-            sse_app = mcp.http_app()
-
-            # OAuth discovery endpoints (required by Smithery.ai)
-            async def oauth_protected_resource(request):
-                return JSONResponse({
-                    "resource_registration_endpoint": f"http://{host}:{port}/register",
-                    "authorization_servers": [f"http://{host}:{port}"],
-                    "scopes_supported": ["mcp:read", "mcp:write", "mcp:execute"],
-                    "response_types_supported": ["code"],
-                    "subject_types_supported": ["public"]
-                })
-
-            async def oauth_authorization_server(request):
-                return JSONResponse({
-                    "issuer": f"http://{host}:{port}",
-                    "authorization_endpoint": f"http://{host}:{port}/authorize",
-                    "token_endpoint": f"http://{host}:{port}/token",
-                    "response_types_supported": ["code"],
-                    "subject_types_supported": ["public"],
-                    "id_token_signing_alg_values_supported": ["RS256"],
-                    "scopes_supported": ["mcp:read", "mcp:write", "mcp:execute"],
-                    "code_challenge_methods_supported": ["S256"]
-                })
-
-            # MCP endpoint with config parameter handling
-            async def mcp_endpoint(request):
-                # Handle config parameter (e30%3D = base64 encoded '{}')
-                config_param = request.query_params.get('config', '')
-                if config_param:
-                    try:
-                        decoded_config = base64.b64decode(unquote(config_param) + '==').decode('utf-8')
-                        config_obj = json.loads(decoded_config)
-                        logger.info(f"Received config: {config_obj}")
-                    except Exception as e:
-                        logger.warning(f"Failed to decode config parameter: {e}")
-
-                # Return basic MCP handshake response
-                if request.method == "GET":
-                    return JSONResponse({
-                        "protocol": "mcp",
-                        "version": "2.0",
-                        "capabilities": {
-                            "tools": True,
-                            "logging": True,
-                            "prompts": True,
-                            "resources": True
-                        },
-                        "server": {
-                            "name": "naramarket-fastmcp-2",
-                            "version": "2.0.0"
-                        }
-                    })
-                elif request.method == "POST":
-                    # Handle MCP protocol messages
-                    try:
-                        body = await request.json()
-                        logger.info(f"MCP message: {body}")
-
-                        # Basic MCP initialize response
-                        if body.get("method") == "initialize":
-                            return JSONResponse({
-                                "id": body.get("id"),
-                                "result": {
-                                    "protocolVersion": "2.0",
-                                    "capabilities": {
-                                        "tools": {"listChanged": True},
-                                        "logging": {},
-                                        "prompts": {"listChanged": True},
-                                        "resources": {"listChanged": True}
-                                    },
-                                    "serverInfo": {
-                                        "name": "naramarket-fastmcp-2",
-                                        "version": "2.0.0"
-                                    }
-                                }
-                            })
-
-                        # List tools
-                        elif body.get("method") == "tools/list":
-                            # Static tool list (more reliable than dynamic fetching)
-                            tools = [
-                                {"name": "crawl_list", "description": "Fetch product list for a category from Nara Market API", "inputSchema": {"type": "object", "properties": {"category": {"type": "string"}, "page_no": {"type": "integer"}, "num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}, "required": ["category"]}},
-                                {"name": "get_detailed_attributes", "description": "Get detailed product attributes from G2B API", "inputSchema": {"type": "object", "properties": {"api_item": {"type": "object"}}, "required": ["api_item"]}},
-                                {"name": "server_info", "description": "Get server status and available tools list", "inputSchema": {"type": "object", "properties": {}}},
-                                {"name": "call_public_data_standard_api", "description": "공공데이터개방표준서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
-                                {"name": "call_procurement_statistics_api", "description": "공공조달통계정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
-                                {"name": "call_product_list_api", "description": "조달청 물품목록정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
-                                {"name": "call_shopping_mall_api", "description": "나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
-                                {"name": "get_all_api_services_info", "description": "모든 API 서비스 정보 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {}}},
-                                {"name": "get_api_operations", "description": "특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}}, "required": ["service_type"]}},
-                                {"name": "call_api_with_pagination_support", "description": "페이징 지원 API 호출 (리모트 서버 환경 최적화)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["service_type", "operation"]}},
-                                {"name": "get_data_exploration_guide", "description": "데이터 탐색을 위한 최적화된 매개변수 가이드 제공", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "expected_data_size": {"type": "string"}}, "required": ["service_type", "operation"]}},
-                                {"name": "get_recent_bid_announcements", "description": "최근 입찰공고 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}}},
-                                {"name": "get_successful_bids_by_business_type", "description": "업무구분별 낙찰정보 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"business_type": {"type": "string"}, "num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}, "required": ["business_type"]}},
-                                {"name": "get_procurement_statistics_by_year", "description": "연도별 공공조달 통계 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"year": {"type": "string"}, "num_rows": {"type": "integer"}}, "required": ["year"]}},
-                                {"name": "search_shopping_mall_products", "description": "나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"product_name": {"type": "string"}, "company_name": {"type": "string"}, "num_rows": {"type": "integer"}}}},
-                                {"name": "health_check", "description": "Health check endpoint for deployment monitoring", "inputSchema": {"type": "object", "properties": {}}}
-                            ]
-
-                            return JSONResponse({
-                                "id": body.get("id"),
-                                "result": {
-                                    "tools": tools
-                                }
-                            })
-
-                        # Default response
-                        return JSONResponse({
-                            "id": body.get("id"),
-                            "error": {
-                                "code": -32601,
-                                "message": "Method not found"
-                            }
-                        })
-                    except Exception as e:
-                        logger.error(f"MCP message handling error: {e}")
-                        return JSONResponse({
-                            "error": {
-                                "code": -32700,
-                                "message": "Parse error"
-                            }
-                        }, status_code=400)
-
-            # Health check endpoint
-            async def health_check(request):
-                return JSONResponse({
-                    "status": "healthy",
-                    "server": "naramarket-fastmcp-2",
-                    "mcp_version": "1.0.0",
-                    "oauth_enabled": True
-                })
-
-            # Create main ASGI app
-            app = Starlette(routes=[
-                Route("/", health_check),
-                Route("/health", health_check),
-                Route("/.well-known/oauth-protected-resource", oauth_protected_resource),
-                Route("/.well-known/oauth-authorization-server", oauth_authorization_server),
-                Route("/mcp", mcp_endpoint, methods=["GET", "POST"]),
-            ])
-
-            # Add CORS middleware
-            app.add_middleware(
-                CORSMiddleware,
-                allow_origins=["*"],
-                allow_credentials=True,
-                allow_methods=["GET", "POST", "OPTIONS"],
-                allow_headers=["*", "Mcp-Session-Id", "Authorization"],
-                expose_headers=["Mcp-Session-Id"]
-            )
-
-            logger.info("MCP server with OAuth discovery endpoints ready")
-
-            # Run with uvicorn
-            uvicorn.run(app, host=host, port=port)
+            # Context7 research suggests letting Smithery.ai handle routing
+            # Run SSE directly and let the platform proxy /mcp to our SSE endpoints
+            import asyncio
+            asyncio.run(mcp.run_async("sse", host=host, port=port))
         elif transport == "sse":
             # SSE mode for real-time communication
             logger.info(f"Starting SSE transport on {host}:{port}")
