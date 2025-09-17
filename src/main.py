@@ -1443,16 +1443,29 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment
-            # Note: FastMCP 2.2.0 uses SSE transport to provide HTTP endpoints
-            # This creates HTTP-accessible MCP endpoints for web deployment
+            # HTTP mode for smithery.ai deployment using streamable_http_app
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (via SSE transport)")
+            logger.info("Transport mode: HTTP (Smithery.ai compatible)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
-            import asyncio
 
-            # Start FastMCP server with CORS handled by middleware patches
-            asyncio.run(mcp.run_async("sse", host=host, port=port))
+            import uvicorn
+            from starlette.middleware.cors import CORSMiddleware
+
+            # Create FastMCP HTTP app for Smithery.ai deployment (updated method)
+            app = mcp.http_app()
+
+            # Add CORS middleware for Smithery.ai compatibility
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_headers=["*"],
+                expose_headers=["mcp-session-id", "mcp-protocol-version"]
+            )
+
+            # Run with uvicorn for Smithery.ai
+            uvicorn.run(app, host=host, port=port)
         elif transport == "sse":
             # SSE mode for real-time communication
             logger.info(f"Starting SSE transport on {host}:{port}")
