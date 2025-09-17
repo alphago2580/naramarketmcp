@@ -4,6 +4,7 @@ FROM python:3.11-slim as base
 # Install system dependencies including ca-certificates for HTTPS
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    netcat-openbsd \
     ca-certificates \
     tzdata \
     && apt-get clean \
@@ -61,9 +62,10 @@ USER naramarket
 # Set dynamic port handling for smithery.ai
 ENV FASTMCP_PORT=${PORT:-8000}
 
-# Health check for MCP server (SSE endpoint compatible)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f --max-time 5 http://localhost:${FASTMCP_PORT}/sse || exit 1
+# Health check for MCP server (connection-based check)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f --connect-timeout 3 --max-time 5 http://localhost:${FASTMCP_PORT}/ || \
+        nc -z localhost ${FASTMCP_PORT} || exit 1
 
 # Expose port (will be set by smithery.ai via PORT env var)
 EXPOSE ${FASTMCP_PORT}
