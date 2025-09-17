@@ -1443,12 +1443,13 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment - run SSE directly
+            # HTTP mode for smithery.ai deployment - direct SSE with Smithery routing
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (SSE direct)")
+            logger.info("Transport mode: HTTP (Direct SSE - let Smithery handle /mcp routing)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
 
-            # Just run SSE directly - Smithery.ai should handle the routing
+            # Context7 research suggests letting Smithery.ai handle routing
+            # Run SSE directly and let the platform proxy /mcp to our SSE endpoints
             import asyncio
             asyncio.run(mcp.run_async("sse", host=host, port=port))
         elif transport == "sse":
