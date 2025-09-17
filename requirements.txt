@@ -3,8 +3,8 @@
 fastmcp==2.11.0
 # HTTP requests to public + G2B endpoints
 requests==2.32.3
-# .env secret loading (NARAMARKET_SERVICE_KEY)
-python-dotenv==1.0.1
+# .env secret loading (NARAMARKET_SERVICE_KEY) - compatible with FastMCP
+python-dotenv>=1.1.0
 # Data processing for CSV/Parquet conversion - using pre-built wheels
 pandas>=2.2.0,<2.3.0
 # Additional dependencies for HTTP server mode (smithery.ai deployment)
