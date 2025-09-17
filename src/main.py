@@ -52,7 +52,10 @@ except Exception as e:
 
 
 # Register MCP Tools
-@mcp.tool()
+@mcp.tool(
+    name="crawl_list",
+    description="Fetch product list for a category from Nara Market API"
+)
 def crawl_list(
     category: str,
     page_no: int = 1,
@@ -84,7 +87,10 @@ def crawl_list(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_detailed_attributes",
+    description="Get detailed product attributes from G2B API"
+)
 def get_detailed_attributes(api_item: Dict[str, Any]) -> DetailResult:
     """Get detailed product attributes from G2B API.
     
@@ -1443,15 +1449,121 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment - direct SSE with Smithery routing
+            # HTTP mode for smithery.ai deployment - hybrid SSE + MCP endpoints
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (Direct SSE - let Smithery handle /mcp routing)")
+            logger.info("Transport mode: HTTP (Hybrid SSE + MCP endpoints)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
 
-            # Context7 research suggests letting Smithery.ai handle routing
-            # Run SSE directly and let the platform proxy /mcp to our SSE endpoints
-            import asyncio
-            asyncio.run(mcp.run_async("sse", host=host, port=port))
+            import uvicorn
+            import json
+            from starlette.applications import Starlette
+            from starlette.routing import Route, Mount
+            from starlette.middleware.cors import CORSMiddleware
+            from starlette.responses import JSONResponse
+            from starlette.requests import Request
+
+            # Create SSE app from FastMCP
+            sse_app = mcp.sse_app()
+
+            # MCP endpoint for Smithery.ai compatibility
+            async def mcp_endpoint(request):
+                if request.method == "POST":
+                    try:
+                        body = await request.json()
+
+                        # MCP initialize
+                        if body.get("method") == "initialize":
+                            return JSONResponse({
+                                "id": body.get("id"),
+                                "result": {
+                                    "protocolVersion": "2.0",
+                                    "capabilities": {
+                                        "tools": {"listChanged": True},
+                                        "logging": {},
+                                        "prompts": {"listChanged": True},
+                                        "resources": {"listChanged": True}
+                                    },
+                                    "serverInfo": {
+                                        "name": "naramarket-fastmcp-2",
+                                        "version": "2.0.0"
+                                    }
+                                }
+                            })
+
+                        # Tools list - static list for reliability
+                        elif body.get("method") == "tools/list":
+                            tools = [
+                                {"name": "crawl_list", "description": "Fetch product list for a category from Nara Market API", "inputSchema": {"type": "object", "properties": {"category": {"type": "string"}, "page_no": {"type": "integer"}, "num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}, "required": ["category"]}},
+                                {"name": "get_detailed_attributes", "description": "Get detailed product attributes from G2B API", "inputSchema": {"type": "object", "properties": {"api_item": {"type": "object"}}, "required": ["api_item"]}},
+                                {"name": "server_info", "description": "Get server status and available tools list", "inputSchema": {"type": "object", "properties": {}}},
+                                {"name": "call_public_data_standard_api", "description": "공공데이터개방표준서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
+                                {"name": "call_procurement_statistics_api", "description": "공공조달통계정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
+                                {"name": "call_product_list_api", "description": "조달청 물품목록정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
+                                {"name": "call_shopping_mall_api", "description": "나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["operation"]}},
+                                {"name": "get_all_api_services_info", "description": "모든 API 서비스 정보 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {}}},
+                                {"name": "get_api_operations", "description": "특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}}, "required": ["service_type"]}},
+                                {"name": "call_api_with_pagination_support", "description": "페이징 지원 API 호출 (리모트 서버 환경 최적화)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "num_rows": {"type": "integer"}, "page_no": {"type": "integer"}}, "required": ["service_type", "operation"]}},
+                                {"name": "get_data_exploration_guide", "description": "데이터 탐색을 위한 최적화된 매개변수 가이드 제공", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "expected_data_size": {"type": "string"}}, "required": ["service_type", "operation"]}},
+                                {"name": "get_recent_bid_announcements", "description": "최근 입찰공고 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}}},
+                                {"name": "get_successful_bids_by_business_type", "description": "업무구분별 낙찰정보 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"business_type": {"type": "string"}, "num_rows": {"type": "integer"}, "days_back": {"type": "integer"}}, "required": ["business_type"]}},
+                                {"name": "get_procurement_statistics_by_year", "description": "연도별 공공조달 통계 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"year": {"type": "string"}, "num_rows": {"type": "integer"}}, "required": ["year"]}},
+                                {"name": "search_shopping_mall_products", "description": "나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"product_name": {"type": "string"}, "company_name": {"type": "string"}, "num_rows": {"type": "integer"}}}},
+                                {"name": "health_check", "description": "Health check endpoint for deployment monitoring", "inputSchema": {"type": "object", "properties": {}}}
+                            ]
+
+                            return JSONResponse({
+                                "id": body.get("id"),
+                                "result": {"tools": tools}
+                            })
+
+                        # Default error
+                        return JSONResponse({
+                            "id": body.get("id"),
+                            "error": {"code": -32601, "message": "Method not found"}
+                        })
+
+                    except Exception as e:
+                        logger.error(f"MCP endpoint error: {e}")
+                        return JSONResponse({
+                            "error": {"code": -32700, "message": "Parse error"}
+                        }, status_code=400)
+
+                # GET request - basic info
+                return JSONResponse({
+                    "protocol": "mcp",
+                    "version": "2.0",
+                    "server": "naramarket-fastmcp-2"
+                })
+
+            # Health check endpoint
+            async def health_check(request):
+                return JSONResponse({
+                    "status": "healthy",
+                    "server": "naramarket-fastmcp-2",
+                    "version": "2.0.0",
+                    "transport": "hybrid"
+                })
+
+            # Main app with both SSE and MCP endpoints
+            app = Starlette(routes=[
+                Route("/", health_check),
+                Route("/health", health_check),
+                Route("/mcp", mcp_endpoint, methods=["GET", "POST"]),
+                Mount("/sse", sse_app),  # Mount SSE app at /sse
+            ])
+
+            # Add CORS middleware
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_headers=["*"],
+                expose_headers=["*"]
+            )
+
+            logger.info("Hybrid server ready: /mcp endpoint + /sse SSE transport")
+            uvicorn.run(app, host=host, port=port)
         elif transport == "sse":
             # SSE mode for real-time communication
             logger.info(f"Starting SSE transport on {host}:{port}")
