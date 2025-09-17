@@ -33,3 +33,7 @@ dist/
 # Backup files
 backup/
 
+# ai agents contexts
+gemini.md
+claude.md
+

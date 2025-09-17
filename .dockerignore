@@ -1,0 +1,73 @@
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Project specific
+data/
+logs/
+*.csv
+*.json
+*.parquet
+*.log
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Test files
+tests/
+test-*.sh
+pytest.ini
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Deployment
+deployments/
+deploy.sh
+build-docker.sh
+UPGRADE_COMPLETE.md
+PROJECT_UPGRADE_REPORT.md
+SMITHERY_DEPLOYMENT.md
+GEMINI.md
+openapi.yaml

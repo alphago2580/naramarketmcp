@@ -2,10 +2,11 @@
 FROM python:3.11-slim as base
 
 # Install system dependencies including ca-certificates for HTTPS
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     tzdata \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set timezone (important for API timestamp validation)
@@ -18,10 +19,14 @@ WORKDIR /app
 # Create non-root user
 RUN groupadd -r naramarket && useradd -r -g naramarket naramarket
 
-# Install Python dependencies
+# Install Python dependencies with faster mirror and optimizations
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --disable-pip-version-check \
+    --index-url https://pypi.org/simple/ \
+    --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir --disable-pip-version-check \
+    --index-url https://pypi.org/simple/ \
+    -r requirements.txt
 
 # Development stage
 FROM base as development
