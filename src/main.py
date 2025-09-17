@@ -455,7 +455,18 @@ def call_api_with_pagination_support(
     operation: str,
     num_rows: int = 10,  # 리모트 서버에서는 적당한 크기 유지
     page_no: int = 1,
-    **kwargs
+    # Common parameters for all services
+    bid_notice_start_date: Optional[str] = None,
+    bid_notice_end_date: Optional[str] = None,
+    search_base_year: Optional[str] = None,
+    upper_product_classification_no: Optional[str] = None,
+    registration_start_date: Optional[str] = None,
+    registration_end_date: Optional[str] = None,
+    # Additional optional parameters
+    bid_announcement_notice_type: Optional[str] = None,
+    business_type: Optional[str] = None,
+    company_name: Optional[str] = None,
+    product_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """페이징 지원 API 호출 (리모트 서버 환경 최적화).
 
@@ -467,16 +478,43 @@ def call_api_with_pagination_support(
         operation: API 오퍼레이션명
         num_rows: 한 페이지 결과 수 (기본값: 10)
         page_no: 페이지 번호 (기본값: 1)
-        **kwargs: 각 오퍼레이션별 추가 파라미터
+        bid_notice_start_date: 입찰공고 시작일 (YYYYMMDDHHMM)
+        bid_notice_end_date: 입찰공고 종료일 (YYYYMMDDHHMM)
+        search_base_year: 검색 기준년도 (YYYY)
+        upper_product_classification_no: 상위물품분류번호
+        registration_start_date: 등록 시작일 (YYYYMMDDHHMM)
+        registration_end_date: 등록 종료일 (YYYYMMDDHHMM)
+        bid_announcement_notice_type: 입찰공고유형
+        business_type: 업종
+        company_name: 업체명
+        product_name: 상품명
 
     Returns:
         컨텍스트 보호된 API 응답 데이터 + 페이징 안내
     """
+    # Build params dict from non-None values
     params = {
         "numOfRows": num_rows,
         "pageNo": page_no,
-        **kwargs
     }
+
+    # Add optional parameters if provided
+    optional_params = {
+        "bidNoticeStartDate": bid_notice_start_date,
+        "bidNoticeEndDate": bid_notice_end_date,
+        "searchBaseYear": search_base_year,
+        "upperProductClassificationNo": upper_product_classification_no,
+        "registrationStartDate": registration_start_date,
+        "registrationEndDate": registration_end_date,
+        "bidAnnouncementNoticeType": bid_announcement_notice_type,
+        "businessType": business_type,
+        "companyName": company_name,
+        "productName": product_name
+    }
+
+    for key, value in optional_params.items():
+        if value is not None:
+            params[key] = value
 
     return enhanced_tools.call_api_with_pagination_guidance(
         service_type=service_type,
