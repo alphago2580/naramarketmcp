@@ -201,5 +201,17 @@ class NaramarketAPIClient:
             }
 
 
-# Global client instance
-api_client = NaramarketAPIClient()
+# Global client instance - lazy initialization
+_api_client = None
+
+def get_api_client() -> NaramarketAPIClient:
+    """Get or create API client instance with lazy initialization."""
+    global _api_client
+    if _api_client is None:
+        _api_client = NaramarketAPIClient()
+    return _api_client
+
+# For backward compatibility
+def api_client():
+    """Backward compatible property access."""
+    return get_api_client()

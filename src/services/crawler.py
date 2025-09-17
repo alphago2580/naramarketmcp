@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from ..core.client import api_client
+from ..core.client import get_api_client
 from ..core.config import DATE_FMT, DEFAULT_DELAY_SEC, DEFAULT_MAX_PAGES, OUTPUT_DIR
 from ..core.models import CrawlToCSVResult
 from ..core.utils import (
@@ -23,7 +23,7 @@ class CrawlingService:
     """Service for handling large-scale crawling operations."""
     
     def __init__(self):
-        self.client = api_client
+        self.client = get_api_client()
         ensure_dir(OUTPUT_DIR)
     
     def crawl_to_csv(

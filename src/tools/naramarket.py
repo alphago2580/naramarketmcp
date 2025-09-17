@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from ..core.client import api_client
+from ..core.client import get_api_client
 from ..core.config import (
     APP_NAME,
     CATEGORIES, 
@@ -61,7 +61,7 @@ class NaramarketTools(BaseTool):
                 inqry_bgn_date, inqry_end_date = date_range_days_back(days_back)
             
             # API call
-            result = api_client.fetch_product_list(
+            result = get_api_client().fetch_product_list(
                 category=category,
                 page_no=page_no,
                 num_rows=num_rows,
@@ -118,7 +118,7 @@ class NaramarketTools(BaseTool):
                 }
             
             # Get detailed attributes from G2B
-            attributes_result = api_client.get_detailed_attributes(api_item)
+            attributes_result = get_api_client().get_detailed_attributes(api_item)
             
             elapsed = calculate_elapsed_time(start_time)
             
