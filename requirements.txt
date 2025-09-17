@@ -8,8 +8,7 @@ python-dotenv>=1.1.0
 # Data processing for CSV/Parquet conversion - using pre-built wheels
 pandas>=2.2.0,<2.3.0
 # Additional dependencies for HTTP server mode (smithery.ai deployment)
-uvicorn==0.30.6
-starlette==0.37.2
+# No additional dependencies needed - FastMCP includes all required HTTP components
 # Python 3.11 compatibility for TypedDict
 typing-extensions>=4.5.0
 
