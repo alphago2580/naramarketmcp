@@ -1586,50 +1586,30 @@ def main():
 
                         # List tools
                         elif body.get("method") == "tools/list":
-                            # Get tools from our MCP server (handle async)
-                            try:
-                                tools = await mcp.get_tools() if hasattr(mcp.get_tools, '__call__') and hasattr(mcp.get_tools(), '__await__') else mcp.get_tools()
-                            except:
-                                # Fallback: create tool list manually
-                                tools = [
-                                    {"name": "crawl_list", "description": "Fetch product list from Nara Market API"},
-                                    {"name": "get_detailed_attributes", "description": "Get detailed product attributes"},
-                                    {"name": "server_info", "description": "Get server status and tools list"},
-                                    {"name": "call_public_data_standard_api", "description": "Call public data standard API"},
-                                    {"name": "call_procurement_statistics_api", "description": "Call procurement statistics API"},
-                                    {"name": "call_product_list_api", "description": "Call product list API"},
-                                    {"name": "call_shopping_mall_api", "description": "Call shopping mall API"},
-                                    {"name": "get_all_api_services_info", "description": "Get all API services info"},
-                                    {"name": "get_api_operations", "description": "Get API operations for service"},
-                                    {"name": "call_api_with_pagination_support", "description": "API call with pagination support"},
-                                    {"name": "get_data_exploration_guide", "description": "Get data exploration guide"},
-                                    {"name": "get_recent_bid_announcements", "description": "Get recent bid announcements"},
-                                    {"name": "get_successful_bids_by_business_type", "description": "Get successful bids by business type"},
-                                    {"name": "get_procurement_statistics_by_year", "description": "Get procurement statistics by year"},
-                                    {"name": "search_shopping_mall_products", "description": "Search shopping mall products"},
-                                    {"name": "health_check", "description": "Health check endpoint"}
-                                ]
-
-                            tool_list = []
-                            for tool in tools:
-                                if hasattr(tool, 'name'):
-                                    tool_list.append({
-                                        "name": tool.name,
-                                        "description": tool.description or "",
-                                        "inputSchema": tool.parameters.model_dump() if hasattr(tool, 'parameters') and hasattr(tool.parameters, 'model_dump') else {}
-                                    })
-                                else:
-                                    # Handle dict format
-                                    tool_list.append({
-                                        "name": tool.get("name", "unknown"),
-                                        "description": tool.get("description", ""),
-                                        "inputSchema": tool.get("inputSchema", {})
-                                    })
+                            # Static tool list (more reliable than dynamic fetching)
+                            tools = [
+                                {"name": "crawl_list", "description": "Fetch product list for a category from Nara Market API", "inputSchema": {"type": "object", "properties": {"category": {"type": "string"}, "page_no": {"type": "integer", "default": 1}, "num_rows": {"type": "integer", "default": 100}, "days_back": {"type": "integer", "default": 7}}}},
+                                {"name": "get_detailed_attributes", "description": "Get detailed product attributes from G2B API", "inputSchema": {"type": "object", "properties": {"api_item": {"type": "object"}}}},
+                                {"name": "server_info", "description": "Get server status and available tools list", "inputSchema": {"type": "object", "properties": {}}},
+                                {"name": "call_public_data_standard_api", "description": "공공데이터개방표준서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}, "page_no": {"type": "integer", "default": 1}}}},
+                                {"name": "call_procurement_statistics_api", "description": "공공조달통계정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}, "page_no": {"type": "integer", "default": 1}}}},
+                                {"name": "call_product_list_api", "description": "조달청 물품목록정보서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}, "page_no": {"type": "integer", "default": 1}}}},
+                                {"name": "call_shopping_mall_api", "description": "나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized)", "inputSchema": {"type": "object", "properties": {"operation": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}, "page_no": {"type": "integer", "default": 1}}}},
+                                {"name": "get_all_api_services_info", "description": "모든 API 서비스 정보 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {}}},
+                                {"name": "get_api_operations", "description": "특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}}}},
+                                {"name": "call_api_with_pagination_support", "description": "페이징 지원 API 호출 (리모트 서버 환경 최적화)", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "num_rows": {"type": "integer", "default": 10}, "page_no": {"type": "integer", "default": 1}}}},
+                                {"name": "get_data_exploration_guide", "description": "데이터 탐색을 위한 최적화된 매개변수 가이드 제공", "inputSchema": {"type": "object", "properties": {"service_type": {"type": "string"}, "operation": {"type": "string"}, "expected_data_size": {"type": "string", "default": "medium"}}}},
+                                {"name": "get_recent_bid_announcements", "description": "최근 입찰공고 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"num_rows": {"type": "integer", "default": 5}, "days_back": {"type": "integer", "default": 7}}}},
+                                {"name": "get_successful_bids_by_business_type", "description": "업무구분별 낙찰정보 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"business_type": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}, "days_back": {"type": "integer", "default": 30}}}},
+                                {"name": "get_procurement_statistics_by_year", "description": "연도별 공공조달 통계 조회 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"year": {"type": "string"}, "num_rows": {"type": "integer", "default": 10}}}},
+                                {"name": "search_shopping_mall_products", "description": "나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구)", "inputSchema": {"type": "object", "properties": {"product_name": {"type": "string"}, "company_name": {"type": "string"}, "num_rows": {"type": "integer", "default": 5}}}},
+                                {"name": "health_check", "description": "Health check endpoint for deployment monitoring", "inputSchema": {"type": "object", "properties": {}}}
+                            ]
 
                             return JSONResponse({
                                 "id": body.get("id"),
                                 "result": {
-                                    "tools": tool_list
+                                    "tools": tools
                                 }
                             })
 
