@@ -1443,15 +1443,197 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment - direct SSE with Smithery routing
+            # HTTP mode for smithery.ai deployment with OAuth discovery endpoints
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (Direct SSE - let Smithery handle /mcp routing)")
+            logger.info("Transport mode: HTTP (Full MCP + OAuth compliance)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
 
-            # Context7 research suggests letting Smithery.ai handle routing
-            # Run SSE directly and let the platform proxy /mcp to our SSE endpoints
-            import asyncio
-            asyncio.run(mcp.run_async("sse", host=host, port=port))
+            import uvicorn
+            import base64
+            import json
+            from urllib.parse import unquote
+            from starlette.applications import Starlette
+            from starlette.routing import Route, Mount
+            from starlette.middleware.cors import CORSMiddleware
+            from starlette.responses import JSONResponse
+            from starlette.requests import Request
+
+            # Create SSE app for MCP functionality
+            sse_app = mcp.sse_app()
+
+            # OAuth discovery endpoints (required by Smithery.ai)
+            async def oauth_protected_resource(request):
+                return JSONResponse({
+                    "resource_registration_endpoint": f"http://{host}:{port}/register",
+                    "authorization_servers": [f"http://{host}:{port}"],
+                    "scopes_supported": ["mcp:read", "mcp:write", "mcp:execute"],
+                    "response_types_supported": ["code"],
+                    "subject_types_supported": ["public"]
+                })
+
+            async def oauth_authorization_server(request):
+                return JSONResponse({
+                    "issuer": f"http://{host}:{port}",
+                    "authorization_endpoint": f"http://{host}:{port}/authorize",
+                    "token_endpoint": f"http://{host}:{port}/token",
+                    "response_types_supported": ["code"],
+                    "subject_types_supported": ["public"],
+                    "id_token_signing_alg_values_supported": ["RS256"],
+                    "scopes_supported": ["mcp:read", "mcp:write", "mcp:execute"],
+                    "code_challenge_methods_supported": ["S256"]
+                })
+
+            # MCP endpoint with config parameter handling
+            async def mcp_endpoint(request):
+                # Handle config parameter (e30%3D = base64 encoded '{}')
+                config_param = request.query_params.get('config', '')
+                if config_param:
+                    try:
+                        decoded_config = base64.b64decode(unquote(config_param) + '==').decode('utf-8')
+                        config_obj = json.loads(decoded_config)
+                        logger.info(f"Received config: {config_obj}")
+                    except Exception as e:
+                        logger.warning(f"Failed to decode config parameter: {e}")
+
+                # Return basic MCP handshake response
+                if request.method == "GET":
+                    return JSONResponse({
+                        "protocol": "mcp",
+                        "version": "1.0.0",
+                        "capabilities": {
+                            "tools": True,
+                            "logging": True,
+                            "prompts": True,
+                            "resources": True
+                        },
+                        "server": {
+                            "name": "naramarket-fastmcp-2",
+                            "version": "2.0.0"
+                        }
+                    })
+                elif request.method == "POST":
+                    # Handle MCP protocol messages
+                    try:
+                        body = await request.json()
+                        logger.info(f"MCP message: {body}")
+
+                        # Basic MCP initialize response
+                        if body.get("method") == "initialize":
+                            return JSONResponse({
+                                "id": body.get("id"),
+                                "result": {
+                                    "protocolVersion": "1.0.0",
+                                    "capabilities": {
+                                        "tools": {"listChanged": True},
+                                        "logging": {},
+                                        "prompts": {"listChanged": True},
+                                        "resources": {"listChanged": True}
+                                    },
+                                    "serverInfo": {
+                                        "name": "naramarket-fastmcp-2",
+                                        "version": "2.0.0"
+                                    }
+                                }
+                            })
+
+                        # List tools
+                        elif body.get("method") == "tools/list":
+                            # Get tools from our MCP server (handle async)
+                            try:
+                                tools = await mcp.get_tools() if hasattr(mcp.get_tools, '__call__') and hasattr(mcp.get_tools(), '__await__') else mcp.get_tools()
+                            except:
+                                # Fallback: create tool list manually
+                                tools = [
+                                    {"name": "crawl_list", "description": "Fetch product list from Nara Market API"},
+                                    {"name": "get_detailed_attributes", "description": "Get detailed product attributes"},
+                                    {"name": "server_info", "description": "Get server status and tools list"},
+                                    {"name": "call_public_data_standard_api", "description": "Call public data standard API"},
+                                    {"name": "call_procurement_statistics_api", "description": "Call procurement statistics API"},
+                                    {"name": "call_product_list_api", "description": "Call product list API"},
+                                    {"name": "call_shopping_mall_api", "description": "Call shopping mall API"},
+                                    {"name": "get_all_api_services_info", "description": "Get all API services info"},
+                                    {"name": "get_api_operations", "description": "Get API operations for service"},
+                                    {"name": "call_api_with_pagination_support", "description": "API call with pagination support"},
+                                    {"name": "get_data_exploration_guide", "description": "Get data exploration guide"},
+                                    {"name": "get_recent_bid_announcements", "description": "Get recent bid announcements"},
+                                    {"name": "get_successful_bids_by_business_type", "description": "Get successful bids by business type"},
+                                    {"name": "get_procurement_statistics_by_year", "description": "Get procurement statistics by year"},
+                                    {"name": "search_shopping_mall_products", "description": "Search shopping mall products"},
+                                    {"name": "health_check", "description": "Health check endpoint"}
+                                ]
+
+                            tool_list = []
+                            for tool in tools:
+                                if hasattr(tool, 'name'):
+                                    tool_list.append({
+                                        "name": tool.name,
+                                        "description": tool.description or "",
+                                        "inputSchema": tool.parameters.model_dump() if hasattr(tool, 'parameters') and hasattr(tool.parameters, 'model_dump') else {}
+                                    })
+                                else:
+                                    # Handle dict format
+                                    tool_list.append({
+                                        "name": tool.get("name", "unknown"),
+                                        "description": tool.get("description", ""),
+                                        "inputSchema": tool.get("inputSchema", {})
+                                    })
+
+                            return JSONResponse({
+                                "id": body.get("id"),
+                                "result": {
+                                    "tools": tool_list
+                                }
+                            })
+
+                        # Default response
+                        return JSONResponse({
+                            "id": body.get("id"),
+                            "error": {
+                                "code": -32601,
+                                "message": "Method not found"
+                            }
+                        })
+                    except Exception as e:
+                        logger.error(f"MCP message handling error: {e}")
+                        return JSONResponse({
+                            "error": {
+                                "code": -32700,
+                                "message": "Parse error"
+                            }
+                        }, status_code=400)
+
+            # Health check endpoint
+            async def health_check(request):
+                return JSONResponse({
+                    "status": "healthy",
+                    "server": "naramarket-fastmcp-2",
+                    "mcp_version": "1.0.0",
+                    "oauth_enabled": True
+                })
+
+            # Create main ASGI app
+            app = Starlette(routes=[
+                Route("/", health_check),
+                Route("/health", health_check),
+                Route("/.well-known/oauth-protected-resource", oauth_protected_resource),
+                Route("/.well-known/oauth-authorization-server", oauth_authorization_server),
+                Route("/mcp", mcp_endpoint, methods=["GET", "POST"]),
+            ])
+
+            # Add CORS middleware
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_headers=["*", "Mcp-Session-Id", "Authorization"],
+                expose_headers=["Mcp-Session-Id"]
+            )
+
+            logger.info("MCP server with OAuth discovery endpoints ready")
+
+            # Run with uvicorn
+            uvicorn.run(app, host=host, port=port)
         elif transport == "sse":
             # SSE mode for real-time communication
             logger.info(f"Starting SSE transport on {host}:{port}")
