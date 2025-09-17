@@ -1,15 +1,15 @@
 ## Runtime dependencies for FastMCP 2.0 server (smithery.ai compatible)
-# FastMCP 2.0 server framework
-fastmcp>=2.0.0
+# FastMCP 2.0 server framework - pinned to stable version
+fastmcp==2.11.0
 # HTTP requests to public + G2B endpoints
-requests>=2.31.0,<2.33.0
+requests==2.32.3
 # .env secret loading (NARAMARKET_SERVICE_KEY)
-python-dotenv>=1.0.0,<1.1.0
-# Data processing for CSV/Parquet conversion
-pandas>=2.0.0,<2.3.0
+python-dotenv==1.0.1
+# Data processing for CSV/Parquet conversion - using pre-built wheels
+pandas>=2.2.0,<2.3.0
 # Additional dependencies for HTTP server mode (smithery.ai deployment)
-uvicorn>=0.29.0,<0.33.0
-starlette>=0.37.0,<0.40.0
+uvicorn==0.30.6
+starlette==0.37.2
 
 ## Development dependencies (optional)
 # pytest>=8.0.0,<9.0.0
