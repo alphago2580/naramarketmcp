@@ -1,6 +1,7 @@
 """Data models and TypedDict definitions for Naramarket FastMCP 2.0 Server."""
 
-from typing import Any, Dict, List, TypedDict
+from typing import Any, Dict, List
+from typing_extensions import TypedDict
 
 
 class CrawlListResult(TypedDict, total=False):

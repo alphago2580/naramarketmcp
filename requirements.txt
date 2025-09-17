@@ -10,6 +10,8 @@ pandas>=2.2.0,<2.3.0
 # Additional dependencies for HTTP server mode (smithery.ai deployment)
 uvicorn==0.30.6
 starlette==0.37.2
+# Python 3.11 compatibility for TypedDict
+typing-extensions>=4.5.0
 
 ## Development dependencies (optional)
 # pytest>=8.0.0,<9.0.0

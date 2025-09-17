@@ -20,7 +20,7 @@ WORKDIR /app
 # Create non-root user
 RUN groupadd -r naramarket && useradd -r -g naramarket naramarket
 
-# Install Python dependencies with compatible versions (cache-bust: 2025-01-17-v2)
+# Install Python dependencies with typing-extensions fix (cache-bust: 2025-01-17-v3)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --disable-pip-version-check \
     --upgrade pip setuptools wheel \
