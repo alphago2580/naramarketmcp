@@ -51,8 +51,8 @@ except Exception as e:
     raise RuntimeError(f"Failed to init FastMCP 2.0: {e}")
 
 
-# Register MCP Tools
-@mcp.tool()
+# Register MCP Tools with proper FastMCP 2.0 schema compliance
+@mcp.tool(description="Fetch product list for a category from Nara Market API")
 def crawl_list(
     category: str,
     page_no: int = 1,
@@ -60,7 +60,7 @@ def crawl_list(
     days_back: int = 7,
     inqry_bgn_date: Optional[str] = None,
     inqry_end_date: Optional[str] = None,
-) -> CrawlListResult:
+) -> dict:
     """Fetch product list for a category from Nara Market API.
     
     Args:
@@ -84,8 +84,8 @@ def crawl_list(
     )
 
 
-@mcp.tool()
-def get_detailed_attributes(api_item: Dict[str, Any]) -> DetailResult:
+@mcp.tool(description="Get detailed product attributes from G2B API")
+def get_detailed_attributes(api_item: dict) -> dict:
     """Get detailed product attributes from G2B API.
     
     Args:
@@ -97,8 +97,8 @@ def get_detailed_attributes(api_item: Dict[str, Any]) -> DetailResult:
     return naramarket_tools.get_detailed_attributes(api_item)
 
 
-@mcp.tool()
-def server_info() -> ServerInfo:
+@mcp.tool(description="Get server status and available tools list")
+def server_info() -> dict:
     """Get server status and available tools list.
 
     Returns:
@@ -108,7 +108,7 @@ def server_info() -> ServerInfo:
 
 
 # Enhanced Korean Government Procurement APIs (Parameterized)
-@mcp.tool()
+@mcp.tool(description="공공데이터개방표준서비스 API 호출 (Enhanced parameterized)")
 def call_public_data_standard_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -122,7 +122,7 @@ def call_public_data_standard_api(
     contract_end_date: Optional[str] = None,
     institution_div_code: Optional[str] = None,
     institution_code: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict:
     """공공데이터개방표준서비스 API 호출 (Enhanced parameterized).
 
     Available operations:
@@ -166,7 +166,7 @@ def call_public_data_standard_api(
     )
 
 
-@mcp.tool()
+@mcp.tool(description="공공조달통계정보서비스 API 호출 (Enhanced parameterized)")
 def call_procurement_statistics_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -182,7 +182,7 @@ def call_procurement_statistics_api(
     product_classification_name: Optional[str] = None,
     lower_institution_result_inclusion: Optional[str] = None,
     link_system_code: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict:
     """공공조달통계정보서비스 API 호출 (Enhanced parameterized).
 
     Available operations (14개):
@@ -241,7 +241,7 @@ def call_procurement_statistics_api(
     )
 
 
-@mcp.tool()
+@mcp.tool(description="조달청 물품목록정보서비스 API 호출 (Enhanced parameterized)")
 def call_product_list_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -260,7 +260,7 @@ def call_product_list_api(
     inquiry_end_date: Optional[str] = None,
     change_period_start_date: Optional[str] = None,
     change_period_end_date: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict:
     """조달청 물품목록정보서비스 API 호출 (Enhanced parameterized).
 
     Available operations (12개):
@@ -323,7 +323,7 @@ def call_product_list_api(
     )
 
 
-@mcp.tool()
+@mcp.tool(description="나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized)")
 def call_shopping_mall_api(
     operation: str,
     num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
@@ -350,7 +350,7 @@ def call_shopping_mall_api(
     delivery_request_no: Optional[str] = None,
     inquiry_product_div: Optional[str] = None,
     procurement_div: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict:
     """나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized).
 
     Available operations (9개):
@@ -426,8 +426,8 @@ def call_shopping_mall_api(
     )
 
 
-@mcp.tool()
-def get_all_api_services_info() -> Dict[str, Any]:
+@mcp.tool(description="모든 API 서비스 정보 조회 (Enhanced)")
+def get_all_api_services_info() -> dict:
     """모든 API 서비스 정보 조회 (Enhanced).
 
     Returns:
@@ -436,8 +436,8 @@ def get_all_api_services_info() -> Dict[str, Any]:
     return enhanced_tools.get_all_api_services_info()
 
 
-@mcp.tool()
-def get_api_operations(service_type: str) -> Dict[str, Any]:
+@mcp.tool(description="특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced)")
+def get_api_operations(service_type: str) -> dict:
     """특정 서비스의 사용 가능한 오퍼레이션 목록 조회 (Enhanced).
 
     Args:
@@ -449,7 +449,7 @@ def get_api_operations(service_type: str) -> Dict[str, Any]:
     return enhanced_tools.get_api_operations(service_type)
 
 
-@mcp.tool()
+@mcp.tool(description="페이징 지원 API 호출 (리모트 서버 환경 최적화)")
 def call_api_with_pagination_support(
     service_type: str,
     operation: str,
@@ -467,7 +467,7 @@ def call_api_with_pagination_support(
     business_type: Optional[str] = None,
     company_name: Optional[str] = None,
     product_name: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict:
     """페이징 지원 API 호출 (리모트 서버 환경 최적화).
 
     이 도구는 리모트 서버 환경에서 많은 데이터를 효율적으로 탐색할 때 사용하세요.
@@ -523,12 +523,12 @@ def call_api_with_pagination_support(
     )
 
 
-@mcp.tool()
+@mcp.tool(description="데이터 탐색을 위한 최적화된 매개변수 가이드 제공")
 def get_data_exploration_guide(
     service_type: str,
     operation: str,
     expected_data_size: str = "medium"
-) -> Dict[str, Any]:
+) -> dict:
     """데이터 탐색을 위한 최적화된 매개변수 가이드 제공.
 
     리모트 서버 환경에서 효율적인 데이터 탐색을 위한 권장 설정을 제공합니다.
@@ -572,11 +572,11 @@ def get_data_exploration_guide(
 
 
 # AI-Friendly Simplified Tools (자주 사용되는 기능들)
-@mcp.tool()
+@mcp.tool(description="최근 입찰공고 조회 (AI 친화적 단순 도구)")
 def get_recent_bid_announcements(
     num_rows: int = 5,
     days_back: int = 7
-) -> Dict[str, Any]:
+) -> dict:
     """최근 입찰공고 조회 (AI 친화적 단순 도구).
 
     가장 자주 사용되는 입찰공고 조회 기능을 단순화했습니다.
@@ -603,12 +603,12 @@ def get_recent_bid_announcements(
     )
 
 
-@mcp.tool()
+@mcp.tool(description="업무구분별 낙찰정보 조회 (AI 친화적 단순 도구)")
 def get_successful_bids_by_business_type(
     business_type: str,
     num_rows: int = 5,
     days_back: int = 30
-) -> Dict[str, Any]:
+) -> dict:
     """업무구분별 낙찰정보 조회 (AI 친화적 단순 도구).
 
     Args:
@@ -724,11 +724,11 @@ def workflow_guide() -> str:
 4. 미래 시장 기회 및 위험 요소 식별
 """
 
-@mcp.tool()
+@mcp.tool(description="연도별 공공조달 통계 조회 (AI 친화적 단순 도구)")
 def get_procurement_statistics_by_year(
     year: str,
     num_rows: int = 10
-) -> Dict[str, Any]:
+) -> dict:
     """연도별 공공조달 통계 조회 (AI 친화적 단순 도구).
 
     Args:
@@ -882,12 +882,12 @@ YYYYMM: 년월 (월별 조회시)
 **해결**: 코드 매핑 테이블 참조 또는 유효 값 조회 먼저 실행
 """
 
-@mcp.tool()
+@mcp.tool(description="나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구)")
 def search_shopping_mall_products(
     product_name: Optional[str] = None,
     company_name: Optional[str] = None,
     num_rows: int = 5
-) -> Dict[str, Any]:
+) -> dict:
     """나라장터 쇼핑몰 제품 검색 (AI 친화적 단순 도구).
 
     Args:
@@ -1194,8 +1194,8 @@ API: call_api_with_pagination_support
 """
 
 # Health check and server info endpoints for Smithery.ai deployment
-@mcp.tool()
-def health_check() -> Dict[str, Any]:
+@mcp.tool(description="Health check endpoint for deployment monitoring")
+def health_check() -> dict:
     """Health check endpoint for deployment monitoring."""
     return {
         "status": "healthy",
@@ -1458,8 +1458,8 @@ def main():
             from starlette.responses import JSONResponse
             from starlette.requests import Request
 
-            # Create SSE app for MCP functionality
-            sse_app = mcp.sse_app()
+            # Create HTTP app for MCP functionality (updated from deprecated sse_app)
+            sse_app = mcp.http_app()
 
             # OAuth discovery endpoints (required by Smithery.ai)
             async def oauth_protected_resource(request):
