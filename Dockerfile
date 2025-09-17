@@ -20,12 +20,11 @@ WORKDIR /app
 # Create non-root user
 RUN groupadd -r naramarket && useradd -r -g naramarket naramarket
 
-# Install Python dependencies with optimized resolver
+# Install Python dependencies with fixed versions (cache-bust: 2025-01-17)
 COPY requirements.txt .
 RUN pip install --no-cache-dir --disable-pip-version-check \
     --upgrade pip setuptools wheel \
     && pip install --no-cache-dir --disable-pip-version-check \
-    --resolver=backtracking --only-binary=all \
     -r requirements.txt
 
 # Development stage
