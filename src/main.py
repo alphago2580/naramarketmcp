@@ -1443,14 +1443,13 @@ def main():
             port = 8000
         
         if transport == "http":
-            # HTTP mode for smithery.ai deployment - use SSE for stability
+            # HTTP mode for smithery.ai deployment - run SSE directly
             logger.info(f"Starting HTTP-accessible MCP server on {host}:{port}")
-            logger.info("Transport mode: HTTP (via stable SSE transport)")
+            logger.info("Transport mode: HTTP (SSE direct)")
             logger.info("CORS enabled for Smithery.ai: *origins, credentials, MCP headers")
 
+            # Just run SSE directly - Smithery.ai should handle the routing
             import asyncio
-            # Use SSE transport which is more stable for Smithery.ai
-            # This avoids the known GET endpoint hanging issue with streamable HTTP
             asyncio.run(mcp.run_async("sse", host=host, port=port))
         elif transport == "sse":
             # SSE mode for real-time communication
