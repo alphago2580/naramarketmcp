@@ -1477,9 +1477,10 @@ def main():
                 CORSMiddleware,
                 allow_origins=["*"],
                 allow_credentials=True,
-                allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-                allow_headers=["*", "Content-Type", "Authorization", "Accept", "Origin", "User-Agent"],
-                expose_headers=["*"]
+                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_headers=["*"],
+                expose_headers=["mcp-session-id", "mcp-protocol-version"],
+                max_age=86400,
             )
 
             logger.info("Pure FastMCP server ready with enhanced CORS")
