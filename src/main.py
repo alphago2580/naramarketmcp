@@ -1460,10 +1460,10 @@ def main():
             from starlette.middleware.cors import CORSMiddleware
             from .core.smithery_middleware import SmitheryCompatibilityMiddleware
 
-            # Create FastMCP HTTP app
+            # Create FastMCP HTTP app (FastMCP 2.12+ standard)
             try:
                 app = mcp.http_app()
-                logger.info("Using modern FastMCP http_app")
+                logger.info("Using FastMCP 2.12+ http_app")
             except AttributeError:
                 app = mcp.sse_app()
                 logger.info("Fallback to FastMCP sse_app")

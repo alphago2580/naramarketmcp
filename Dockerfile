@@ -58,7 +58,7 @@ RUN mkdir -p /app/data && chown -R naramarket:naramarket /app
 USER naramarket
 
 # Set dynamic port handling for smithery.ai
-ENV FASTMCP_PORT=${PORT:-8000}
+ENV FASTMCP_PORT=${PORT:-8081}
 
 # Health check for MCP server (connection-based check)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \

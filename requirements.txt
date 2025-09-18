@@ -1,6 +1,6 @@
 ## Runtime dependencies for FastMCP 2.0 server (smithery.ai compatible)
 # FastMCP 2.0 server framework - pinned to stable version
-fastmcp==2.11.0
+fastmcp>=2.12.3
 # HTTP requests to public + G2B endpoints
 requests==2.32.3
 # .env secret loading (NARAMARKET_SERVICE_KEY) - compatible with FastMCP
