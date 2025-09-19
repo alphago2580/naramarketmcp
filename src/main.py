@@ -15,6 +15,7 @@ from .core.models import (
     DetailResult,
     ServerInfo
 )
+from .core.response_filter import filter_response_fields, get_available_fields, get_all_response_formats
 from .tools.naramarket import naramarket_tools
 from .tools.enhanced_tools import enhanced_tools
 from .tools.naramarket_search_apis import naramarket_search_apis
@@ -130,7 +131,9 @@ def call_procurement_statistics_api(
     product_classification_no: Optional[str] = None,
     product_classification_name: Optional[str] = None,
     lower_institution_result_inclusion: Optional[str] = None,
-    link_system_code: Optional[str] = None
+    link_system_code: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """공공조달통계정보서비스 API 호출 (Enhanced parameterized).
 
@@ -165,9 +168,11 @@ def call_procurement_statistics_api(
         product_classification_name: 물품분류명
         lower_institution_result_inclusion: 하위기관실적포함여부
         link_system_code: 연계시스템코드
+        fields: 선택할 필드 목록 (예: ["기관명", "조달금액"])
+        response_format: 응답 형식 ("full", "compact", "minimal")
 
     Returns:
-        API 응답 데이터
+        API 응답 데이터 (필드 선택 적용됨)
     """
     kwargs = {}
     if search_base_year: kwargs["srchBssYear"] = search_base_year
@@ -182,11 +187,20 @@ def call_procurement_statistics_api(
     if lower_institution_result_inclusion: kwargs["lwrInsttArsltInclsnYn"] = lower_institution_result_inclusion
     if link_system_code: kwargs["linkSystmCd"] = link_system_code
 
-    return enhanced_tools.call_procurement_statistics_api(
+    # API 호출
+    result = enhanced_tools.call_procurement_statistics_api(
         operation=operation,
         numOfRows=num_rows,
         pageNo=page_no,
         **kwargs
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="procurement_stats"
     )
 
 
@@ -208,7 +222,9 @@ def call_product_list_api(
     inquiry_start_date: Optional[str] = None,
     inquiry_end_date: Optional[str] = None,
     change_period_start_date: Optional[str] = None,
-    change_period_end_date: Optional[str] = None
+    change_period_end_date: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """조달청 물품목록정보서비스 API 호출 (Enhanced parameterized).
 
@@ -244,9 +260,11 @@ def call_product_list_api(
         inquiry_end_date: 조회종료일시 (YYYYMMDDHHMM)
         change_period_start_date: 변경기간 시작일자 (YYYYMMDD)
         change_period_end_date: 변경기간 종료일자 (YYYYMMDD)
+        fields: 선택할 필드 목록 (예: ["품목명", "제조업체명"])
+        response_format: 응답 형식 ("full", "compact", "minimal")
 
     Returns:
-        API 응답 데이터
+        API 응답 데이터 (필드 선택 적용됨)
     """
     kwargs = {}
     if upper_product_classification_no: kwargs["upPrdctClsfcNo"] = upper_product_classification_no
@@ -264,11 +282,20 @@ def call_product_list_api(
     if change_period_start_date: kwargs["chgPrdBgnDt"] = change_period_start_date
     if change_period_end_date: kwargs["chgPrdEndDt"] = change_period_end_date
 
-    return enhanced_tools.call_product_list_api(
+    # API 호출
+    result = enhanced_tools.call_product_list_api(
         operation=operation,
         numOfRows=num_rows,
         pageNo=page_no,
         **kwargs
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="product_list"
     )
 
 
@@ -298,7 +325,9 @@ def call_shopping_mall_api(
     demand_institution_region_name: Optional[str] = None,
     delivery_request_no: Optional[str] = None,
     inquiry_product_div: Optional[str] = None,
-    procurement_div: Optional[str] = None
+    procurement_div: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터 종합쇼핑몰 품목정보 서비스 API 호출 (Enhanced parameterized).
 
@@ -339,9 +368,11 @@ def call_shopping_mall_api(
         delivery_request_no: 납품요구번호
         inquiry_product_div: 조회상품구분
         procurement_div: 조달방식구분
+        fields: 선택할 필드 목록 (예: ["품목명", "계약업체명"])
+        response_format: 응답 형식 ("full", "compact", "minimal")
 
     Returns:
-        API 응답 데이터
+        API 응답 데이터 (필드 선택 적용됨)
     """
     kwargs = {}
     if registration_start_date: kwargs["rgstDtBgnDt"] = registration_start_date
@@ -367,11 +398,20 @@ def call_shopping_mall_api(
     if inquiry_product_div: kwargs["inqryPrdctDiv"] = inquiry_product_div
     if procurement_div: kwargs["prcrmntDiv"] = procurement_div
 
-    return enhanced_tools.call_shopping_mall_api(
+    # API 호출
+    result = enhanced_tools.call_shopping_mall_api(
         operation=operation,
         numOfRows=num_rows,
         pageNo=page_no,
         **kwargs
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="shopping_mall"
     )
 
 
@@ -396,6 +436,29 @@ def get_api_operations(service_type: str) -> Dict[str, Any]:
         서비스별 오퍼레이션 목록
     """
     return enhanced_tools.get_api_operations(service_type)
+
+
+@mcp.tool()
+def get_response_field_info(service_type: str = "bid_announcement") -> Dict[str, Any]:
+    """API 응답 필드 선택 기능 정보 조회.
+
+    Args:
+        service_type: 서비스 타입 (bid_announcement, successful_bid, contract_info, procurement_stats, product_list, shopping_mall)
+
+    Returns:
+        필드 선택 가능한 정보 및 사용법
+    """
+    return get_available_fields(service_type)
+
+
+@mcp.tool()
+def get_all_response_format_info() -> Dict[str, Any]:
+    """모든 서비스의 응답 형태 정보 조회.
+
+    Returns:
+        전체 응답 형태 정보 및 사용 가이드
+    """
+    return get_all_response_formats()
 
 
 @mcp.tool()
@@ -538,7 +601,9 @@ def get_bid_announcement_construction(
     prtcpt_lmt_rgn_cd: Optional[str] = None,
     indstryty_nm: Optional[str] = None,
     presmpt_prce_bgn: Optional[int] = None,
-    presmpt_prce_end: Optional[int] = None
+    presmpt_prce_end: Optional[int] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 입찰공고공사조회 (AI 친화적 도구).
 
@@ -556,14 +621,17 @@ def get_bid_announcement_construction(
         indstryty_nm: 업종명 (부분검색 가능)
         presmpt_prce_bgn: 추정가격 시작금액 (원)
         presmpt_prce_end: 추정가격 종료금액 (원)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "presmptPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        입찰공고 공사 목록
+        입찰공고 공사 목록 (필터링된 필드)
     """
     # 자동으로 날짜 범위 계산
     inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_bid_announcement_construction(
+    # API 호출
+    result = naramarket_search_apis.get_bid_announcement_construction(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -576,6 +644,14 @@ def get_bid_announcement_construction(
         indstryty_nm=indstryty_nm,
         presmpt_prce_bgn=presmpt_prce_bgn,
         presmpt_prce_end=presmpt_prce_end
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="bid_announcement"
     )
 
 
@@ -591,7 +667,9 @@ def get_bid_announcement_service(
     prtcpt_lmt_rgn_cd: Optional[str] = None,
     indstryty_nm: Optional[str] = None,
     presmpt_prce_bgn: Optional[int] = None,
-    presmpt_prce_end: Optional[int] = None
+    presmpt_prce_end: Optional[int] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 입찰공고용역조회 (AI 친화적 도구).
 
@@ -609,14 +687,17 @@ def get_bid_announcement_service(
         indstryty_nm: 업종명 (부분검색 가능)
         presmpt_prce_bgn: 추정가격 시작금액 (원)
         presmpt_prce_end: 추정가격 종료금액 (원)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "presmptPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        입찰공고 용역 목록
+        입찰공고 용역 목록 (필터링된 필드)
     """
     # 자동으로 날짜 범위 계산
     inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_bid_announcement_service(
+    # API 호출
+    result = naramarket_search_apis.get_bid_announcement_service(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -631,6 +712,14 @@ def get_bid_announcement_service(
         presmpt_prce_end=presmpt_prce_end
     )
 
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="bid_announcement"
+    )
+
 
 @mcp.tool()
 def get_bid_announcement_goods(
@@ -642,7 +731,9 @@ def get_bid_announcement_goods(
     ntce_instt_nm: Optional[str] = None,
     dminst_nm: Optional[str] = None,
     prtcpt_lmt_rgn_cd: Optional[str] = None,
-    mas_yn: Optional[str] = None
+    mas_yn: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 입찰공고물품조회 (AI 친화적 도구).
 
@@ -658,14 +749,17 @@ def get_bid_announcement_goods(
         dminst_nm: 수요기관명 (부분검색 가능)
         prtcpt_lmt_rgn_cd: 참가제한지역코드 (11:서울, 41:경기도 등)
         mas_yn: 다수공급경쟁자여부 (Y/N)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "presmptPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        입찰공고 물품 목록
+        입찰공고 물품 목록 (필터링된 필드)
     """
     # 자동으로 날짜 범위 계산
     inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_bid_announcement_goods(
+    # API 호출
+    result = naramarket_search_apis.get_bid_announcement_goods(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -676,6 +770,14 @@ def get_bid_announcement_goods(
         dminst_nm=dminst_nm,
         prtcpt_lmt_rgn_cd=prtcpt_lmt_rgn_cd,
         mas_yn=mas_yn
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="bid_announcement"
     )
 
 
@@ -692,7 +794,9 @@ def get_successful_bid_list_goods(
     page_no: int = 1,
     bid_ntce_nm: Optional[str] = None,
     ntce_instt_nm: Optional[str] = None,
-    dminst_nm: Optional[str] = None
+    dminst_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터 검색조건에 의한 낙찰된 목록 현황 물품조회 (AI 친화적 도구).
 
@@ -705,9 +809,11 @@ def get_successful_bid_list_goods(
         bid_ntce_nm: 입찰공고명 (부분검색 가능)
         ntce_instt_nm: 공고기관명 (부분검색 가능)
         dminst_nm: 수요기관명 (부분검색 가능)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "scsbidPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        낙찰정보 물품 목록
+        낙찰정보 물품 목록 (필터링된 필드)
     """
     inqry_bgn_dt = None
     inqry_end_dt = None
@@ -716,7 +822,8 @@ def get_successful_bid_list_goods(
     if inqry_div in ["1", "2"]:
         inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_successful_bid_list_goods(
+    # API 호출
+    result = naramarket_search_apis.get_successful_bid_list_goods(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -726,6 +833,14 @@ def get_successful_bid_list_goods(
         bid_ntce_nm=bid_ntce_nm,
         ntce_instt_nm=ntce_instt_nm,
         dminst_nm=dminst_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="successful_bid"
     )
 
 
@@ -738,7 +853,9 @@ def get_successful_bid_list_construction(
     page_no: int = 1,
     bid_ntce_nm: Optional[str] = None,
     ntce_instt_nm: Optional[str] = None,
-    dminst_nm: Optional[str] = None
+    dminst_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터 검색조건에 의한 낙찰된 목록 현황 공사조회 (AI 친화적 도구).
 
@@ -751,9 +868,11 @@ def get_successful_bid_list_construction(
         bid_ntce_nm: 입찰공고명 (부분검색 가능)
         ntce_instt_nm: 공고기관명 (부분검색 가능)
         dminst_nm: 수요기관명 (부분검색 가능)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "scsbidPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        낙찰정보 공사 목록
+        낙찰정보 공사 목록 (필터링된 필드)
     """
     inqry_bgn_dt = None
     inqry_end_dt = None
@@ -762,7 +881,8 @@ def get_successful_bid_list_construction(
     if inqry_div in ["1", "2"]:
         inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_successful_bid_list_construction(
+    # API 호출
+    result = naramarket_search_apis.get_successful_bid_list_construction(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -772,6 +892,14 @@ def get_successful_bid_list_construction(
         bid_ntce_nm=bid_ntce_nm,
         ntce_instt_nm=ntce_instt_nm,
         dminst_nm=dminst_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="successful_bid"
     )
 
 
@@ -784,7 +912,9 @@ def get_successful_bid_list_service(
     page_no: int = 1,
     bid_ntce_nm: Optional[str] = None,
     ntce_instt_nm: Optional[str] = None,
-    dminst_nm: Optional[str] = None
+    dminst_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터 검색조건에 의한 낙찰된 목록 현황 용역조회 (AI 친화적 도구).
 
@@ -797,9 +927,11 @@ def get_successful_bid_list_service(
         bid_ntce_nm: 입찰공고명 (부분검색 가능)
         ntce_instt_nm: 공고기관명 (부분검색 가능)
         dminst_nm: 수요기관명 (부분검색 가능)
+        fields: 선택할 특정 필드 리스트 (예: ["bidNtceNo", "bidNtceNm", "scsbidPrce"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        낙찰정보 용역 목록
+        낙찰정보 용역 목록 (필터링된 필드)
     """
     inqry_bgn_dt = None
     inqry_end_dt = None
@@ -808,7 +940,8 @@ def get_successful_bid_list_service(
     if inqry_div in ["1", "2"]:
         inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return naramarket_search_apis.get_successful_bid_list_service(
+    # API 호출
+    result = naramarket_search_apis.get_successful_bid_list_service(
         inqry_div=inqry_div,
         inqry_bgn_dt=inqry_bgn_dt,
         inqry_end_dt=inqry_end_dt,
@@ -818,6 +951,14 @@ def get_successful_bid_list_service(
         bid_ntce_nm=bid_ntce_nm,
         ntce_instt_nm=ntce_instt_nm,
         dminst_nm=dminst_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="successful_bid"
     )
 
 
@@ -835,7 +976,9 @@ def get_contract_info_goods(
     num_of_rows: int = 10,
     page_no: int = 1,
     instt_nm: Optional[str] = None,
-    prdct_clsfc_no_nm: Optional[str] = None
+    prdct_clsfc_no_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 계약현황 물품조회 (AI 친화적 도구).
 
@@ -849,9 +992,11 @@ def get_contract_info_goods(
         page_no: 페이지 번호 (기본값: 1)
         instt_nm: 기관명
         prdct_clsfc_no_nm: 품명
+        fields: 선택할 특정 필드 리스트 (예: ["cntrctNo", "cntrctAmt", "prdctNm"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        계약정보 물품 목록
+        계약정보 물품 목록 (필터링된 필드)
     """
     inqry_bgn_date = None
     inqry_end_date = None
@@ -864,7 +1009,8 @@ def get_contract_info_goods(
         inqry_bgn_date = start_date.strftime("%Y%m%d")
         inqry_end_date = end_date.strftime("%Y%m%d")
 
-    return naramarket_search_apis.get_contract_info_goods(
+    # API 호출
+    result = naramarket_search_apis.get_contract_info_goods(
         inqry_div=inqry_div,
         inqry_bgn_date=inqry_bgn_date,
         inqry_end_date=inqry_end_date,
@@ -875,6 +1021,14 @@ def get_contract_info_goods(
         page_no=page_no,
         instt_nm=instt_nm,
         prdct_clsfc_no_nm=prdct_clsfc_no_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="contract_info"
     )
 
 
@@ -888,7 +1042,9 @@ def get_contract_info_construction(
     num_of_rows: int = 10,
     page_no: int = 1,
     cnstty_nm: Optional[str] = None,
-    cnstwk_nm: Optional[str] = None
+    cnstwk_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 계약현황 공사조회 (AI 친화적 도구).
 
@@ -902,9 +1058,11 @@ def get_contract_info_construction(
         page_no: 페이지 번호 (기본값: 1)
         cnstty_nm: 공종명
         cnstwk_nm: 공사명
+        fields: 선택할 특정 필드 리스트 (예: ["cntrctNo", "cntrctAmt", "cnstwkNm"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        계약정보 공사 목록
+        계약정보 공사 목록 (필터링된 필드)
     """
     inqry_bgn_date = None
     inqry_end_date = None
@@ -917,7 +1075,8 @@ def get_contract_info_construction(
         inqry_bgn_date = start_date.strftime("%Y%m%d")
         inqry_end_date = end_date.strftime("%Y%m%d")
 
-    return naramarket_search_apis.get_contract_info_construction(
+    # API 호출
+    result = naramarket_search_apis.get_contract_info_construction(
         inqry_div=inqry_div,
         inqry_bgn_date=inqry_bgn_date,
         inqry_end_date=inqry_end_date,
@@ -928,6 +1087,14 @@ def get_contract_info_construction(
         page_no=page_no,
         cnstty_nm=cnstty_nm,
         cnstwk_nm=cnstwk_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="contract_info"
     )
 
 
@@ -941,7 +1108,9 @@ def get_contract_info_service(
     num_of_rows: int = 10,
     page_no: int = 1,
     cnstty_nm: Optional[str] = None,
-    cntrct_nm: Optional[str] = None
+    cntrct_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 계약현황 용역조회 (AI 친화적 도구).
 
@@ -955,9 +1124,11 @@ def get_contract_info_service(
         page_no: 페이지 번호 (기본값: 1)
         cnstty_nm: 공종명
         cntrct_nm: 계약명(용역명)
+        fields: 선택할 특정 필드 리스트 (예: ["cntrctNo", "cntrctAmt", "cntrctNm"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        계약정보 용역 목록
+        계약정보 용역 목록 (필터링된 필드)
     """
     inqry_bgn_date = None
     inqry_end_date = None
@@ -970,7 +1141,8 @@ def get_contract_info_service(
         inqry_bgn_date = start_date.strftime("%Y%m%d")
         inqry_end_date = end_date.strftime("%Y%m%d")
 
-    return naramarket_search_apis.get_contract_info_service(
+    # API 호출
+    result = naramarket_search_apis.get_contract_info_service(
         inqry_div=inqry_div,
         inqry_bgn_date=inqry_bgn_date,
         inqry_end_date=inqry_end_date,
@@ -981,6 +1153,14 @@ def get_contract_info_service(
         page_no=page_no,
         cnstty_nm=cnstty_nm,
         cntrct_nm=cntrct_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="contract_info"
     )
 
 
@@ -995,7 +1175,9 @@ def get_contract_info_foreign(
     page_no: int = 1,
     prdct_clsfc_no_nm: Optional[str] = None,
     sply_corp_nm: Optional[str] = None,
-    make_corp_nm: Optional[str] = None
+    make_corp_nm: Optional[str] = None,
+    fields: Optional[List[str]] = None,
+    response_format: str = "full"
 ) -> Dict[str, Any]:
     """나라장터검색조건에 의한 계약현황 외자조회 (AI 친화적 도구).
 
@@ -1010,9 +1192,11 @@ def get_contract_info_foreign(
         prdct_clsfc_no_nm: 품명(영문물품명)
         sply_corp_nm: 공급업체명
         make_corp_nm: 제작업체명
+        fields: 선택할 특정 필드 리스트 (예: ["cntrctNo", "cntrctAmt", "prdctClsfcNoNm"])
+        response_format: 응답 형태 ("full", "summary", "minimal", "key_fields")
 
     Returns:
-        계약정보 외자 목록
+        계약정보 외자 목록 (필터링된 필드)
     """
     inqry_bgn_date = None
     inqry_end_date = None
@@ -1025,7 +1209,8 @@ def get_contract_info_foreign(
         inqry_bgn_date = start_date.strftime("%Y%m%d")
         inqry_end_date = end_date.strftime("%Y%m%d")
 
-    return naramarket_search_apis.get_contract_info_foreign(
+    # API 호출
+    result = naramarket_search_apis.get_contract_info_foreign(
         inqry_div=inqry_div,
         inqry_bgn_date=inqry_bgn_date,
         inqry_end_date=inqry_end_date,
@@ -1037,6 +1222,14 @@ def get_contract_info_foreign(
         prdct_clsfc_no_nm=prdct_clsfc_no_nm,
         sply_corp_nm=sply_corp_nm,
         make_corp_nm=make_corp_nm
+    )
+
+    # 응답 필터링 적용
+    return filter_response_fields(
+        response_data=result,
+        fields=fields,
+        response_format=response_format,
+        service_type="contract_info"
     )
 
 
@@ -1111,6 +1304,31 @@ def workflow_guide() -> str:
 - **트렌드 분석**: 30-90일 (낙찰/계약)
 - **시장 분석**: 365일 (통계 API)
 
+### 3-3. 필드 선택 및 응답 최적화 (신규 기능)
+#### 응답 형태 선택
+- **response_format="full"**: 전체 응답 (기본값)
+- **response_format="summary"**: 주요 정보만 (입찰번호, 제목, 금액 등)
+- **response_format="minimal"**: 최소 정보 (식별자만)
+- **response_format="key_fields"**: 분석용 핵심 필드
+
+#### 맞춤형 필드 선택
+```python
+# 특정 필드만 선택
+fields=["bidNtceNo", "bidNtceNm", "presmptPrce"]
+
+# 입찰공고 핵심 필드 예시
+fields=["bidNtceNo", "bidNtceNm", "ntceInsttNm", "presmptPrce", "bidClseDt"]
+
+# 낙찰정보 핵심 필드 예시
+fields=["bidNtceNo", "sucsfbidCorpNm", "cntrctCnclsAmt", "sucsfbidMthd"]
+```
+
+#### 사용 시나리오별 권장 설정
+- **빠른 개요 파악**: response_format="summary"
+- **대용량 데이터 분석**: response_format="key_fields" + 작은 페이지 크기
+- **특정 필드 분석**: fields 파라미터로 필요 필드만 선택
+- **AI 처리 최적화**: response_format="minimal"로 컨텍스트 절약
+
 ## 4. 결과 해석 및 활용
 
 ### 4-1. 컨텍스트 보호 이해
@@ -1142,6 +1360,47 @@ def workflow_guide() -> str:
 2. 기관별/지역별 조달 특성 분석
 3. 정책 변화가 시장에 미친 영향 추적
 4. 미래 시장 기회 및 위험 요소 식별
+
+## 6. 필드 선택 기능 사용 예제
+
+### 예제 1: 입찰공고 요약 정보만 조회
+```python
+get_bid_announcement_construction(
+    days_back=7,
+    response_format="summary",
+    ntce_instt_nm="서울시"
+)
+# 결과: 입찰번호, 제목, 기관명, 금액, 마감일만 포함
+```
+
+### 예제 2: 특정 필드만 선택하여 조회
+```python
+get_successful_bid_list_goods(
+    days_back=30,
+    fields=["bidNtceNo", "sucsfbidCorpNm", "cntrctCnclsAmt"],
+    num_of_rows=20
+)
+# 결과: 입찰번호, 낙찰업체명, 계약금액만 포함
+```
+
+### 예제 3: AI 분석을 위한 최적화된 조회
+```python
+get_contract_info_construction(
+    days_back=90,
+    response_format="key_fields",
+    num_of_rows=5
+)
+# 결과: 분석에 핵심적인 필드들만 포함하여 컨텍스트 절약
+```
+
+### 예제 4: 필드 정보 확인
+```python
+get_response_field_info("bid_announcement")
+# 결과: 입찰공고 서비스에서 사용 가능한 필드 목록과 응답 형태 정보
+
+get_all_response_format_info()
+# 결과: 모든 서비스의 응답 형태 정보
+```
 """
 
 @mcp.tool()
