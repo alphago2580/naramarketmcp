@@ -16,6 +16,7 @@ from .core.models import (
     ServerInfo
 )
 from .core.response_filter import filter_response_fields, get_available_fields, get_all_response_formats
+from .core.key_utils import get_key_status
 from .tools.naramarket import naramarket_tools
 from .tools.enhanced_tools import enhanced_tools
 from .tools.naramarket_search_apis import naramarket_search_apis
@@ -459,6 +460,30 @@ def get_all_response_format_info() -> Dict[str, Any]:
         전체 응답 형태 정보 및 사용 가이드
     """
     return get_all_response_formats()
+
+
+@mcp.tool()
+def get_api_key_status() -> Dict[str, Any]:
+    """API 키 설정 상태 및 구성 정보 조회.
+
+    Returns:
+        키 설정 상태와 사용 방법 안내
+    """
+    status = get_key_status()
+
+    return {
+        "key_configuration": status,
+        "usage_priority": [
+            "1순위: 사용자 제공 키 (환경변수 NARAMARKET_SERVICE_KEY)",
+            "2순위: Smithery.ai 설정 키",
+            "3순위: 내장 운영 키 (자동 사용)"
+        ],
+        "setup_guide": {
+            "no_key_needed": "내장 운영 키가 설정되어 있어 별도 키 설정 없이 사용 가능" if status.get("builtin_key_configured") else "API 키 설정이 필요합니다",
+            "user_key_setup": "고객 전용 키 사용시: NARAMARKET_SERVICE_KEY 환경변수 설정",
+            "builtin_key_info": "내장 키는 하루 10만건 제한, 무료 사용 가능"
+        }
+    }
 
 
 @mcp.tool()

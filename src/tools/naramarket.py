@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from ..core.client import get_api_client
 from ..core.config import (
     APP_NAME,
-    CATEGORIES, 
+    CATEGORIES,
     DEFAULT_DELAY_SEC,
     DEFAULT_MAX_PAGES,
     DEFAULT_NUM_ROWS,
@@ -23,6 +23,7 @@ from ..core.utils import (
     calculate_elapsed_time,
     date_range_days_back
 )
+from ..core.key_utils import get_key_status
 from .base import BaseTool
 
 
@@ -207,6 +208,9 @@ class NaramarketTools(BaseTool):
             "get_region_codes"
         ]
         
+        # 키 설정 상태 확인
+        key_status = get_key_status()
+
         return {
             "success": True,
             "app": APP_NAME,
@@ -220,8 +224,16 @@ class NaramarketTools(BaseTool):
                 "입찰공고/낙찰정보/계약정보 통합 검색",
                 "자동 날짜 범위 계산",
                 "Memory-based Processing",
-                "Enhanced get_detailed_attributes"
-            ]
+                "Enhanced get_detailed_attributes",
+                "API 응답 필드 선택 기능",
+                "내장 운영 키 지원 (키 설정 불필요)"
+            ],
+            "api_key_status": {
+                "builtin_key_available": key_status.get("builtin_key_configured", False),
+                "encryption_working": key_status.get("encryption_working", False),
+                "key_required": not key_status.get("builtin_key_configured", False),
+                "setup_info": "사용자 키 미제공시 내장 운영 키 자동 사용" if key_status.get("builtin_key_configured") else "API 키 설정 필요"
+            }
         }
 
 
