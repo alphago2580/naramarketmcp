@@ -169,7 +169,7 @@ class OpenAPITools:
         change_end_date: Optional[str] = None,
         product_certification: Optional[str] = None
     ) -> Dict[str, Any]:
-        """다수공급자계약 품목정보 조회 (getMASCntrctPrdctInfoList) - 핵심 API."""
+        """다수공급자계약 품목정보 조회 (getMASCntrctPrdctInfoList) - """
         endpoint = f"{self.base_url}/at/ShoppingMallPrdctInfoService/getMASCntrctPrdctInfoList"
         
         params = {
@@ -199,7 +199,7 @@ class OpenAPITools:
         return {
             "endpoint": endpoint,
             "params": params,
-            "description": "다수공급자계약 품목정보 조회 - 핵심 API",
+            "description": "다수공급자계약 품목정보 조회",
             "method": "GET"
         }
 

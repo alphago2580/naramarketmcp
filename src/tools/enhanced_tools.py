@@ -37,11 +37,6 @@ class EnhancedProcurementTools(BaseTool):
     def _extract_key_fields(self, item: Dict[str, Any], service_type: str) -> Dict[str, Any]:
         """서비스 타입별 핵심 필드만 추출합니다."""
         key_fields_map = {
-            "public_data_standard": [
-                "bidNtceNo", "bidNtceNm", "ntceKindNm", "bidNtceDt", "bidClseDt",
-                "opengDt", "bidBeginDt", "bidEndDt", "cmmnSpldmdAgrmntRcptdtEndDt",
-                "cntrctCnclsDate", "cntrctamt", "sucsfbidAmt", "presmptPrce"
-            ],
             "procurement_statistics": [
                 "bssMnth", "statDivNm", "bssYearAmt", "dminsttNm", "entrprsNm",
                 "cntrctMthdNm", "bsnsObjNm", "prdctClsfcNm"
@@ -233,64 +228,6 @@ class EnhancedProcurementTools(BaseTool):
                 "error_type": type(e).__name__
             }
 
-    def call_public_data_standard_api(
-        self,
-        operation: str,
-        numOfRows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
-        pageNo: int = 1,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """공공데이터개방표준서비스 API 호출.
-
-        Available operations:
-        - getDataSetOpnStdBidPblancInfo: 입찰공고정보 조회
-        - getDataSetOpnStdScsbidInfo: 낙찰정보 조회
-        - getDataSetOpnStdCntrctInfo: 계약정보 조회
-
-        Args:
-            operation: API 오퍼레이션명
-            numOfRows: 한 페이지 결과 수 (기본값: 10)
-            pageNo: 페이지 번호 (기본값: 1)
-            **kwargs: 각 오퍼레이션별 추가 파라미터
-                - bidNtceBgnDt/bidNtceEndDt: 입찰공고일시 범위 (YYYYMMDDHHMM)
-                - bsnsDivCd: 업무구분코드 (1:물품, 2:외자, 3:공사, 5:용역)
-                - opengBgnDt/opengEndDt: 개찰일시 범위 (YYYYMMDDHHMM)
-                - cntrctCnclsBgnDate/cntrctCnclsEndDate: 계약체결일자 범위 (YYYYMMDD)
-                - insttDivCd: 기관구분코드 (1:계약기관, 2:수요기관)
-                - insttCd: 기관코드
-
-        Returns:
-            API 응답 데이터
-        """
-        try:
-            params = {
-                "numOfRows": numOfRows,
-                "pageNo": pageNo,
-                **kwargs
-            }
-
-            result = self.client.call_api("public_data_standard", operation, params)
-
-            # 컨텍스트 보호 적용
-            protected_result = self._protect_context_response(result, "public_data_standard", operation)
-
-            return {
-                "success": True,
-                "service": "공공데이터개방표준서비스",
-                "operation": operation,
-                "data": protected_result,
-                "params_used": params
-            }
-
-        except Exception as e:
-            logger.error(f"Public data standard API call failed: {e}")
-            return {
-                "success": False,
-                "service": "공공데이터개방표준서비스",
-                "operation": operation,
-                "error": str(e),
-                "error_type": type(e).__name__
-            }
 
     def call_procurement_statistics_api(
         self,

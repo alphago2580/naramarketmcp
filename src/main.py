@@ -17,6 +17,7 @@ from .core.models import (
 )
 from .tools.naramarket import naramarket_tools
 from .tools.enhanced_tools import enhanced_tools
+from .tools.naramarket_search_apis import naramarket_search_apis
 from .core.cors_middleware import apply_cors_to_fastmcp
 from .core.fastmcp_cors_patch import patch_fastmcp_for_smithery, apply_fastmcp_cors_patch
 
@@ -114,64 +115,6 @@ def server_info() -> ServerInfo:
 
 
 # Enhanced Korean Government Procurement APIs (Parameterized)
-@mcp.tool()
-def call_public_data_standard_api(
-    operation: str,
-    num_rows: int = 5,  # 컨텍스트 보호를 위해 기본값 감소
-    page_no: int = 1,
-    bid_notice_start_date: Optional[str] = None,
-    bid_notice_end_date: Optional[str] = None,
-    business_div_code: Optional[str] = None,
-    opening_start_date: Optional[str] = None,
-    opening_end_date: Optional[str] = None,
-    contract_start_date: Optional[str] = None,
-    contract_end_date: Optional[str] = None,
-    institution_div_code: Optional[str] = None,
-    institution_code: Optional[str] = None
-) -> Dict[str, Any]:
-    """공공데이터개방표준서비스 API 호출 (Enhanced parameterized).
-
-    Available operations:
-    - getDataSetOpnStdBidPblancInfo: 입찰공고정보 조회
-    - getDataSetOpnStdScsbidInfo: 낙찰정보 조회
-    - getDataSetOpnStdCntrctInfo: 계약정보 조회
-
-    Args:
-        operation: API 오퍼레이션명
-        num_rows: 한 페이지 결과 수 (기본값: 10)
-        page_no: 페이지 번호 (기본값: 1)
-        bid_notice_start_date: 입찰공고시작일시 (YYYYMMDDHHMM)
-        bid_notice_end_date: 입찰공고종료일시 (YYYYMMDDHHMM)
-        business_div_code: 업무구분코드 (1:물품, 2:외자, 3:공사, 5:용역)
-        opening_start_date: 개찰시작일시 (YYYYMMDDHHMM)
-        opening_end_date: 개찰종료일시 (YYYYMMDDHHMM)
-        contract_start_date: 계약체결시작일자 (YYYYMMDD)
-        contract_end_date: 계약체결종료일자 (YYYYMMDD)
-        institution_div_code: 기관구분코드 (1:계약기관, 2:수요기관)
-        institution_code: 기관코드
-
-    Returns:
-        API 응답 데이터
-    """
-    kwargs = {}
-    if bid_notice_start_date: kwargs["bidNtceBgnDt"] = bid_notice_start_date
-    if bid_notice_end_date: kwargs["bidNtceEndDt"] = bid_notice_end_date
-    if business_div_code: kwargs["bsnsDivCd"] = business_div_code
-    if opening_start_date: kwargs["opengBgnDt"] = opening_start_date
-    if opening_end_date: kwargs["opengEndDt"] = opening_end_date
-    if contract_start_date: kwargs["cntrctCnclsBgnDate"] = contract_start_date
-    if contract_end_date: kwargs["cntrctCnclsEndDate"] = contract_end_date
-    if institution_div_code: kwargs["insttDivCd"] = institution_div_code
-    if institution_code: kwargs["insttCd"] = institution_code
-
-    return enhanced_tools.call_public_data_standard_api(
-        operation=operation,
-        numOfRows=num_rows,
-        pageNo=page_no,
-        **kwargs
-    )
-
-
 @mcp.tool()
 def call_procurement_statistics_api(
     operation: str,
@@ -578,77 +521,537 @@ def get_data_exploration_guide(
 
 
 # AI-Friendly Simplified Tools (자주 사용되는 기능들)
-@mcp.tool()
-def get_recent_bid_announcements(
-    num_rows: int = 5,
-    days_back: int = 7
-) -> Dict[str, Any]:
-    """최근 입찰공고 조회 (AI 친화적 단순 도구).
 
-    가장 자주 사용되는 입찰공고 조회 기능을 단순화했습니다.
+# ===================
+# 입찰공고서비스 API
+# ===================
+
+@mcp.tool()
+def get_bid_announcement_construction(
+    inqry_div: str = "1",
+    days_back: int = 7,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None,
+    prtcpt_lmt_rgn_cd: Optional[str] = None,
+    indstryty_nm: Optional[str] = None,
+    presmpt_prce_bgn: Optional[int] = None,
+    presmpt_prce_end: Optional[int] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 입찰공고공사조회 (AI 친화적 도구).
+
+    공사부문의 입찰공고정보를 조회합니다. 자동으로 날짜 범위를 계산합니다.
 
     Args:
-        num_rows: 조회할 공고 수 (기본값: 5)
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시)
         days_back: 며칠 전까지 조회할지 (기본값: 7일)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+        prtcpt_lmt_rgn_cd: 참가제한지역코드 (11:서울, 41:경기도 등)
+        indstryty_nm: 업종명 (부분검색 가능)
+        presmpt_prce_bgn: 추정가격 시작금액 (원)
+        presmpt_prce_end: 추정가격 종료금액 (원)
 
     Returns:
-        최근 입찰공고 목록
+        입찰공고 공사 목록
     """
-    from datetime import datetime, timedelta
-
     # 자동으로 날짜 범위 계산
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days_back)
+    inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return enhanced_tools.call_public_data_standard_api(
-        operation="getDataSetOpnStdBidPblancInfo",
-        numOfRows=num_rows,
-        pageNo=1,
-        bidNtceBgnDt=start_date.strftime("%Y%m%d0000"),
-        bidNtceEndDt=end_date.strftime("%Y%m%d2359")
+    return naramarket_search_apis.get_bid_announcement_construction(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm,
+        prtcpt_lmt_rgn_cd=prtcpt_lmt_rgn_cd,
+        indstryty_nm=indstryty_nm,
+        presmpt_prce_bgn=presmpt_prce_bgn,
+        presmpt_prce_end=presmpt_prce_end
     )
 
 
 @mcp.tool()
-def get_successful_bids_by_business_type(
-    business_type: str,
-    num_rows: int = 5,
-    days_back: int = 30
+def get_bid_announcement_service(
+    inqry_div: str = "1",
+    days_back: int = 7,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None,
+    prtcpt_lmt_rgn_cd: Optional[str] = None,
+    indstryty_nm: Optional[str] = None,
+    presmpt_prce_bgn: Optional[int] = None,
+    presmpt_prce_end: Optional[int] = None
 ) -> Dict[str, Any]:
-    """업무구분별 낙찰정보 조회 (AI 친화적 단순 도구).
+    """나라장터검색조건에 의한 입찰공고용역조회 (AI 친화적 도구).
+
+    용역부문의 입찰공고정보를 조회합니다. 자동으로 날짜 범위를 계산합니다.
 
     Args:
-        business_type: 업무구분 ("물품", "외자", "공사", "용역" 중 선택)
-        num_rows: 조회할 결과 수 (기본값: 5)
-        days_back: 며칠 전까지 조회할지 (기본값: 30일)
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시)
+        days_back: 며칠 전까지 조회할지 (기본값: 7일)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+        prtcpt_lmt_rgn_cd: 참가제한지역코드 (11:서울, 41:경기도 등)
+        indstryty_nm: 업종명 (부분검색 가능)
+        presmpt_prce_bgn: 추정가격 시작금액 (원)
+        presmpt_prce_end: 추정가격 종료금액 (원)
 
     Returns:
-        업무구분별 낙찰정보
+        입찰공고 용역 목록
     """
-    from datetime import datetime, timedelta
-
-    # 한글을 코드로 변환
-    business_codes = {
-        "물품": "1",
-        "외자": "2",
-        "공사": "3",
-        "용역": "5"
-    }
-
-    business_code = business_codes.get(business_type, "1")
-
     # 자동으로 날짜 범위 계산
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days_back)
+    inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
 
-    return enhanced_tools.call_public_data_standard_api(
-        operation="getDataSetOpnStdScsbidInfo",
-        numOfRows=num_rows,
-        pageNo=1,
-        bsnsDivCd=business_code,
-        opengBgnDt=start_date.strftime("%Y%m%d0000"),
-        opengEndDt=end_date.strftime("%Y%m%d2359")
+    return naramarket_search_apis.get_bid_announcement_service(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm,
+        prtcpt_lmt_rgn_cd=prtcpt_lmt_rgn_cd,
+        indstryty_nm=indstryty_nm,
+        presmpt_prce_bgn=presmpt_prce_bgn,
+        presmpt_prce_end=presmpt_prce_end
     )
+
+
+@mcp.tool()
+def get_bid_announcement_goods(
+    inqry_div: str = "1",
+    days_back: int = 7,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None,
+    prtcpt_lmt_rgn_cd: Optional[str] = None,
+    mas_yn: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 입찰공고물품조회 (AI 친화적 도구).
+
+    물품부문의 입찰공고정보를 조회합니다. 자동으로 날짜 범위를 계산합니다.
+
+    Args:
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시)
+        days_back: 며칠 전까지 조회할지 (기본값: 7일)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+        prtcpt_lmt_rgn_cd: 참가제한지역코드 (11:서울, 41:경기도 등)
+        mas_yn: 다수공급경쟁자여부 (Y/N)
+
+    Returns:
+        입찰공고 물품 목록
+    """
+    # 자동으로 날짜 범위 계산
+    inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
+
+    return naramarket_search_apis.get_bid_announcement_goods(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm,
+        prtcpt_lmt_rgn_cd=prtcpt_lmt_rgn_cd,
+        mas_yn=mas_yn
+    )
+
+
+# ===================
+# 낙찰정보서비스 API
+# ===================
+
+@mcp.tool()
+def get_successful_bid_list_goods(
+    inqry_div: str,
+    days_back: int = 30,
+    bid_ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터 검색조건에 의한 낙찰된 목록 현황 물품조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시, 3:입찰공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div가 1,2일 때만 사용, 기본값: 30일)
+        bid_ntce_no: 입찰공고번호 (inqry_div=3일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+
+    Returns:
+        낙찰정보 물품 목록
+    """
+    inqry_bgn_dt = None
+    inqry_end_dt = None
+
+    # 날짜 기반 조회인 경우에만 날짜 범위 계산
+    if inqry_div in ["1", "2"]:
+        inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
+
+    return naramarket_search_apis.get_successful_bid_list_goods(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        bid_ntce_no=bid_ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm
+    )
+
+
+@mcp.tool()
+def get_successful_bid_list_construction(
+    inqry_div: str,
+    days_back: int = 30,
+    bid_ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터 검색조건에 의한 낙찰된 목록 현황 공사조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시, 3:입찰공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div가 1,2일 때만 사용, 기본값: 30일)
+        bid_ntce_no: 입찰공고번호 (inqry_div=3일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+
+    Returns:
+        낙찰정보 공사 목록
+    """
+    inqry_bgn_dt = None
+    inqry_end_dt = None
+
+    # 날짜 기반 조회인 경우에만 날짜 범위 계산
+    if inqry_div in ["1", "2"]:
+        inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
+
+    return naramarket_search_apis.get_successful_bid_list_construction(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        bid_ntce_no=bid_ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm
+    )
+
+
+@mcp.tool()
+def get_successful_bid_list_service(
+    inqry_div: str,
+    days_back: int = 30,
+    bid_ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    bid_ntce_nm: Optional[str] = None,
+    ntce_instt_nm: Optional[str] = None,
+    dminst_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터 검색조건에 의한 낙찰된 목록 현황 용역조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:공고게시일시, 2:개찰일시, 3:입찰공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div가 1,2일 때만 사용, 기본값: 30일)
+        bid_ntce_no: 입찰공고번호 (inqry_div=3일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        bid_ntce_nm: 입찰공고명 (부분검색 가능)
+        ntce_instt_nm: 공고기관명 (부분검색 가능)
+        dminst_nm: 수요기관명 (부분검색 가능)
+
+    Returns:
+        낙찰정보 용역 목록
+    """
+    inqry_bgn_dt = None
+    inqry_end_dt = None
+
+    # 날짜 기반 조회인 경우에만 날짜 범위 계산
+    if inqry_div in ["1", "2"]:
+        inqry_bgn_dt, inqry_end_dt = naramarket_search_apis.format_date_range(days_back)
+
+    return naramarket_search_apis.get_successful_bid_list_service(
+        inqry_div=inqry_div,
+        inqry_bgn_dt=inqry_bgn_dt,
+        inqry_end_dt=inqry_end_dt,
+        bid_ntce_no=bid_ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        bid_ntce_nm=bid_ntce_nm,
+        ntce_instt_nm=ntce_instt_nm,
+        dminst_nm=dminst_nm
+    )
+
+
+# ===================
+# 계약정보서비스 API
+# ===================
+
+@mcp.tool()
+def get_contract_info_goods(
+    inqry_div: str,
+    days_back: int = 30,
+    dcsn_cntrct_no: Optional[str] = None,
+    req_no: Optional[str] = None,
+    ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    instt_nm: Optional[str] = None,
+    prdct_clsfc_no_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 계약현황 물품조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:계약체결일자, 2:확정계약번호, 3:요청번호, 4:공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div=1일 때만 사용, 기본값: 30일)
+        dcsn_cntrct_no: 확정계약번호 (inqry_div=2일 때 필수)
+        req_no: 요청번호 (inqry_div=3일 때 필수)
+        ntce_no: 공고번호 (inqry_div=4일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        instt_nm: 기관명
+        prdct_clsfc_no_nm: 품명
+
+    Returns:
+        계약정보 물품 목록
+    """
+    inqry_bgn_date = None
+    inqry_end_date = None
+
+    # 계약체결일자 기반 조회인 경우에만 날짜 범위 계산 (YYYYMMDD 형식)
+    if inqry_div == "1":
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        inqry_bgn_date = start_date.strftime("%Y%m%d")
+        inqry_end_date = end_date.strftime("%Y%m%d")
+
+    return naramarket_search_apis.get_contract_info_goods(
+        inqry_div=inqry_div,
+        inqry_bgn_date=inqry_bgn_date,
+        inqry_end_date=inqry_end_date,
+        dcsn_cntrct_no=dcsn_cntrct_no,
+        req_no=req_no,
+        ntce_no=ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        instt_nm=instt_nm,
+        prdct_clsfc_no_nm=prdct_clsfc_no_nm
+    )
+
+
+@mcp.tool()
+def get_contract_info_construction(
+    inqry_div: str,
+    days_back: int = 30,
+    dcsn_cntrct_no: Optional[str] = None,
+    req_no: Optional[str] = None,
+    ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    cnstty_nm: Optional[str] = None,
+    cnstwk_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 계약현황 공사조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:계약체결일자, 2:확정계약번호, 3:요청번호, 4:공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div=1일 때만 사용, 기본값: 30일)
+        dcsn_cntrct_no: 확정계약번호 (inqry_div=2일 때 필수)
+        req_no: 요청번호 (inqry_div=3일 때 필수)
+        ntce_no: 공고번호 (inqry_div=4일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        cnstty_nm: 공종명
+        cnstwk_nm: 공사명
+
+    Returns:
+        계약정보 공사 목록
+    """
+    inqry_bgn_date = None
+    inqry_end_date = None
+
+    # 계약체결일자 기반 조회인 경우에만 날짜 범위 계산 (YYYYMMDD 형식)
+    if inqry_div == "1":
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        inqry_bgn_date = start_date.strftime("%Y%m%d")
+        inqry_end_date = end_date.strftime("%Y%m%d")
+
+    return naramarket_search_apis.get_contract_info_construction(
+        inqry_div=inqry_div,
+        inqry_bgn_date=inqry_bgn_date,
+        inqry_end_date=inqry_end_date,
+        dcsn_cntrct_no=dcsn_cntrct_no,
+        req_no=req_no,
+        ntce_no=ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        cnstty_nm=cnstty_nm,
+        cnstwk_nm=cnstwk_nm
+    )
+
+
+@mcp.tool()
+def get_contract_info_service(
+    inqry_div: str,
+    days_back: int = 30,
+    dcsn_cntrct_no: Optional[str] = None,
+    req_no: Optional[str] = None,
+    ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    cnstty_nm: Optional[str] = None,
+    cntrct_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 계약현황 용역조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:계약체결일자, 2:확정계약번호, 3:요청번호, 4:공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div=1일 때만 사용, 기본값: 30일)
+        dcsn_cntrct_no: 확정계약번호 (inqry_div=2일 때 필수)
+        req_no: 요청번호 (inqry_div=3일 때 필수)
+        ntce_no: 공고번호 (inqry_div=4일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        cnstty_nm: 공종명
+        cntrct_nm: 계약명(용역명)
+
+    Returns:
+        계약정보 용역 목록
+    """
+    inqry_bgn_date = None
+    inqry_end_date = None
+
+    # 계약체결일자 기반 조회인 경우에만 날짜 범위 계산 (YYYYMMDD 형식)
+    if inqry_div == "1":
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        inqry_bgn_date = start_date.strftime("%Y%m%d")
+        inqry_end_date = end_date.strftime("%Y%m%d")
+
+    return naramarket_search_apis.get_contract_info_service(
+        inqry_div=inqry_div,
+        inqry_bgn_date=inqry_bgn_date,
+        inqry_end_date=inqry_end_date,
+        dcsn_cntrct_no=dcsn_cntrct_no,
+        req_no=req_no,
+        ntce_no=ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        cnstty_nm=cnstty_nm,
+        cntrct_nm=cntrct_nm
+    )
+
+
+@mcp.tool()
+def get_contract_info_foreign(
+    inqry_div: str,
+    days_back: int = 30,
+    dcsn_cntrct_no: Optional[str] = None,
+    req_no: Optional[str] = None,
+    ntce_no: Optional[str] = None,
+    num_of_rows: int = 10,
+    page_no: int = 1,
+    prdct_clsfc_no_nm: Optional[str] = None,
+    sply_corp_nm: Optional[str] = None,
+    make_corp_nm: Optional[str] = None
+) -> Dict[str, Any]:
+    """나라장터검색조건에 의한 계약현황 외자조회 (AI 친화적 도구).
+
+    Args:
+        inqry_div: 조회구분 (1:계약체결일자, 2:확정계약번호, 3:요청번호, 4:공고번호)
+        days_back: 며칠 전까지 조회할지 (inqry_div=1일 때만 사용, 기본값: 30일)
+        dcsn_cntrct_no: 확정계약번호 (inqry_div=2일 때 필수)
+        req_no: 요청번호 (inqry_div=3일 때 필수)
+        ntce_no: 공고번호 (inqry_div=4일 때 필수)
+        num_of_rows: 한 페이지 결과 수 (기본값: 10)
+        page_no: 페이지 번호 (기본값: 1)
+        prdct_clsfc_no_nm: 품명(영문물품명)
+        sply_corp_nm: 공급업체명
+        make_corp_nm: 제작업체명
+
+    Returns:
+        계약정보 외자 목록
+    """
+    inqry_bgn_date = None
+    inqry_end_date = None
+
+    # 계약체결일자 기반 조회인 경우에만 날짜 범위 계산 (YYYYMMDD 형식)
+    if inqry_div == "1":
+        from datetime import datetime, timedelta
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        inqry_bgn_date = start_date.strftime("%Y%m%d")
+        inqry_end_date = end_date.strftime("%Y%m%d")
+
+    return naramarket_search_apis.get_contract_info_foreign(
+        inqry_div=inqry_div,
+        inqry_bgn_date=inqry_bgn_date,
+        inqry_end_date=inqry_end_date,
+        dcsn_cntrct_no=dcsn_cntrct_no,
+        req_no=req_no,
+        ntce_no=ntce_no,
+        num_of_rows=num_of_rows,
+        page_no=page_no,
+        prdct_clsfc_no_nm=prdct_clsfc_no_nm,
+        sply_corp_nm=sply_corp_nm,
+        make_corp_nm=make_corp_nm
+    )
+
+
+# ===================
+# 유틸리티 도구
+# ===================
+
+@mcp.tool()
+def get_region_codes() -> Dict[str, str]:
+    """나라장터 참가제한지역코드 목록 조회.
+
+    Returns:
+        지역코드와 지역명의 매핑 딕셔너리
+    """
+    return naramarket_search_apis.get_region_codes()
 
 
 @mcp.prompt()
@@ -661,41 +1064,52 @@ def workflow_guide() -> str:
 
 ### 1-1. 입찰공고 현황 파악
 - **목적**: 최신 입찰 동향 파악
-- **도구**: `get_recent_bid_announcements()`
-- **권장설정**: 업무구분="물품", 일수=7-30일, 결과수=5-10개
+- **도구**:
+  - `get_bid_announcement_construction()` - 공사 입찰
+  - `get_bid_announcement_service()` - 용역 입찰
+  - `get_bid_announcement_goods()` - 물품 입찰
+- **권장설정**: days_back=7-30, 기관명/지역 필터 활용
 - **활용**: 시장 트렌드, 입찰 빈도 분석
 
 ### 1-2. 낙찰결과 분석
 - **목적**: 성공한 입찰의 패턴 분석
-- **도구**: `get_successful_bids_by_business()`
-- **권장설정**: 업무구분별 구분 조회, 30일 기간
+- **도구**:
+  - `get_successful_bid_list_goods()` - 물품 낙찰정보
+  - `get_successful_bid_list_construction()` - 공사 낙찰정보
+  - `get_successful_bid_list_service()` - 용역 낙찰정보
+- **권장설정**: inqry_div="1", days_back=30
 - **활용**: 가격 범위, 선정 기준 분석
 
 ## 2. 심화 분석 단계
 
-### 2-1. 통계 기반 시장 분석
+### 2-1. 계약정보 분석
+- **목적**: 실제 체결된 계약 현황 파악
+- **도구**:
+  - `get_contract_info_goods()` - 물품 계약정보
+  - `get_contract_info_construction()` - 공사 계약정보
+  - `get_contract_info_service()` - 용역 계약정보
+  - `get_contract_info_foreign()` - 외자 계약정보
+- **권장설정**: inqry_div="1", days_back=30-90
+- **활용**: 계약 규모, 기관별 조달 패턴
+
+### 2-2. 통계 기반 시장 분석
 - **목적**: 연도별/기관별 조달 규모 파악
-- **도구**: `get_procurement_statistics_by_year()`
+- **도구**: `call_procurement_statistics_api()`
 - **권장설정**: 최근 2-3년 데이터 비교
 - **활용**: 시장 규모 변화, 성장률 분석
 
-### 2-2. 상품별 세부 분석
-- **목적**: 특정 품목의 조달 현황
-- **도구**: `get_mas_products_by_category()`
-- **권장설정**: 분류코드 지정, 충분한 결과수
-- **활용**: 품목별 가격 비교, 수요 패턴
+## 3. 검색 전략 및 팁
 
-## 3. 맞춤형 검색 전략
-
-### 3-1. 키워드 기반 검색
-- **상황**: 특정 제품/서비스 찾기
-- **방법**: operation에 적절한 검색 파라미터 조합
-- **팁**: 한글 입력시 자동 코드 변환 활용
+### 3-1. 조회구분 활용법
+- **1: 공고게시일시/계약체결일자** - 기간별 트렌드 분석
+- **2: 개찰일시/확정계약번호** - 특정 일정/계약 추적
+- **3: 입찰공고번호/요청번호** - 개별 건 상세 조회
+- **4: 공고번호** - 공고 기반 연계 분석
 
 ### 3-2. 날짜 범위 최적화
-- **최신 동향**: 7-30일 범위
-- **트렌드 분석**: 3-12개월 범위
-- **연도별 비교**: 전체 연도 단위
+- **최신 동향**: 7-14일 (입찰공고)
+- **트렌드 분석**: 30-90일 (낙찰/계약)
+- **시장 분석**: 365일 (통계 API)
 
 ## 4. 결과 해석 및 활용
 

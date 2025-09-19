@@ -51,7 +51,6 @@ class EnhancedAPIClient:
 
         # Service base URLs
         self.service_urls = {
-            "public_data_standard": "http://apis.data.go.kr/1230000/ao/PubDataOpnStdService",
             "procurement_statistics": "http://apis.data.go.kr/1230000/at/PubPrcrmntStatInfoService",
             "product_list": "http://apis.data.go.kr/1230000/ao/ThngListInfoService",
             "shopping_mall": "http://apis.data.go.kr/1230000/at/ShoppingMallPrdctInfoService"
@@ -59,11 +58,6 @@ class EnhancedAPIClient:
 
         # Operation mappings for each service
         self.operation_mappings = {
-            "public_data_standard": {
-                "getDataSetOpnStdBidPblancInfo": "getDataSetOpnStdBidPblancInfo",
-                "getDataSetOpnStdScsbidInfo": "getDataSetOpnStdScsbidInfo",
-                "getDataSetOpnStdCntrctInfo": "getDataSetOpnStdCntrctInfo"
-            },
             "procurement_statistics": {
                 "getTotlPubPrcrmntSttus": "getTotlPubPrcrmntSttus",
                 "getInsttDivAccotPrcrmntSttus": "getInsttDivAccotPrcrmntSttus",
