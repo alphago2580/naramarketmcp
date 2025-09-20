@@ -18,6 +18,9 @@ DATE_FMT = "%Y%m%d"
 MAX_RETRIES = 3
 RETRY_BACKOFF_BASE = 0.75
 
+# 출력 디렉토리 설정
+OUTPUT_DIR = "data"
+
 # 기존 API 엔드포인트 (호환성 유지)
 BASE_LIST_URL = "http://apis.data.go.kr/1230000/at/ShoppingMallPrdctInfoService/getShoppingMallPrdctInfoList"
 G2B_DETAIL_URL = "https://shop.g2b.go.kr/gm/gms/gmsf/GdsDtlInfo/selectPdctAtrbInfo.do"
@@ -113,33 +116,36 @@ def parse_smithery_config() -> Dict[str, Any]:
         }
 
 def get_service_key() -> str:
-    """Get Naramarket service key from environment or smithery.ai config with secure handling."""
+    """Get Naramarket service key with priority: user key > builtin key."""
     import logging
-    
+    from .key_utils import get_builtin_service_key
+
     logger = logging.getLogger(__name__)
-    
+
     try:
-        # First try smithery.ai configuration
+        # 1순위: smithery.ai 설정
         config = parse_smithery_config()
-        key = config.get("naramarketServiceKey")
-        
-        if not key:
-            # Fallback to environment variable
-            key = os.environ.get("NARAMARKET_SERVICE_KEY")
-        
-        if not key:
-            logger.error("API service key not found in configuration")
-            raise ValueError("naramarketServiceKey is required. Set via smithery.ai config or NARAMARKET_SERVICE_KEY environment variable")
-        
-        # Validate key format (should not be placeholder)
-        if key in ["your-api-key-here", "SECURE_API_KEY_REQUIRED", "", "null", "undefined"]:
-            logger.error("Invalid or placeholder API key detected")
-            raise ValueError("Invalid API key. Please provide a valid naramarketServiceKey")
-        
-        # Log success without exposing the key
-        logger.info(f"API service key loaded successfully (length: {len(key)})")
-        return key
-        
+        user_key = config.get("naramarketServiceKey")
+
+        # 2순위: 환경변수
+        if not user_key or user_key in ["your-api-key-here", "SECURE_API_KEY_REQUIRED", "", "null", "undefined"]:
+            user_key = os.environ.get("NARAMARKET_SERVICE_KEY")
+
+        # 사용자가 유효한 키를 제공한 경우
+        if user_key and user_key not in ["your-api-key-here", "SECURE_API_KEY_REQUIRED", "", "null", "undefined"]:
+            logger.info(f"Using user-provided API key (length: {len(user_key)})")
+            return user_key
+
+        # 3순위: 내장 운영 키 사용
+        builtin_key = get_builtin_service_key()
+        if builtin_key:
+            logger.info(f"Using builtin production API key (length: {len(builtin_key)})")
+            return builtin_key
+
+        # 모든 키가 없는 경우
+        logger.error("No API service key available")
+        raise ValueError("No API key available. Either provide NARAMARKET_SERVICE_KEY or ensure builtin key is configured")
+
     except Exception as e:
         logger.error(f"Error retrieving service key: {e}")
         raise

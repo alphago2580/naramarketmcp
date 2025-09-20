@@ -46,6 +46,7 @@ tags:
   - fastmcp
   - security-hardened
 
+# we will fix the authorship and license later
 authors:
   - name: "NaraMarket MCP Team"
     email: "ss929698@gmail.com"

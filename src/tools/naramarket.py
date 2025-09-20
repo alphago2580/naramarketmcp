@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 from ..core.client import get_api_client
 from ..core.config import (
     APP_NAME,
-    CATEGORIES, 
+    CATEGORIES,
     DEFAULT_DELAY_SEC,
     DEFAULT_MAX_PAGES,
     DEFAULT_NUM_ROWS,
@@ -23,6 +23,7 @@ from ..core.utils import (
     calculate_elapsed_time,
     date_range_days_back
 )
+from ..core.key_utils import get_key_status
 from .base import BaseTool
 
 
@@ -94,8 +95,7 @@ class NaramarketTools(BaseTool):
     def get_detailed_attributes(self, api_item: Dict[str, Any]) -> DetailResult:
         """Get detailed product attributes from G2B API (Enhanced in FastMCP 2.0).
         
-        이 함수는 나라마켓 서버의 핵심 기능으로, getMASCntrctPrdctInfoList API와
-        연계되어 매우 강력한 기능을 제공합니다. 절대 삭제하지 마세요!
+        
         
         Args:
             api_item: Product item from list API
@@ -176,18 +176,41 @@ class NaramarketTools(BaseTool):
             ServerInfo with server details
         """
         available_tools = [
+            # 기존 나라마켓 도구들
             "crawl_list",
-            "get_detailed_attributes", 
+            "get_detailed_attributes",
             "crawl_to_memory",
             "server_info",
-            # OpenAPI tools
-            "get_bid_announcement_info",
-            "get_successful_bid_info", 
-            "get_contract_info",
-            "get_total_procurement_status",
-            "get_mas_contract_product_info"
+
+            # 새로운 나라장터 검색 API들
+            # 입찰공고서비스
+            "get_bid_announcement_construction",
+            "get_bid_announcement_service",
+            "get_bid_announcement_goods",
+
+            # 낙찰정보서비스
+            "get_successful_bid_list_goods",
+            "get_successful_bid_list_construction",
+            "get_successful_bid_list_service",
+
+            # 계약정보서비스
+            "get_contract_info_goods",
+            "get_contract_info_construction",
+            "get_contract_info_service",
+            "get_contract_info_foreign",
+
+            # 기존 APIs
+            "call_procurement_statistics_api",
+            "call_product_list_api",
+            "call_shopping_mall_api",
+
+            # 유틸리티
+            "get_region_codes"
         ]
         
+        # 키 설정 상태 확인
+        key_status = get_key_status()
+
         return {
             "success": True,
             "app": APP_NAME,
@@ -197,10 +220,20 @@ class NaramarketTools(BaseTool):
             "enhanced_features": [
                 "FastMCP 2.0 Support",
                 "Streamable HTTP Transport",
-                "OpenAPI Integration", 
+                "나라장터 검색조건 지원 (10개 API)",
+                "입찰공고/낙찰정보/계약정보 통합 검색",
+                "자동 날짜 범위 계산",
                 "Memory-based Processing",
-                "Enhanced get_detailed_attributes"
-            ]
+                "Enhanced get_detailed_attributes",
+                "API 응답 필드 선택 기능",
+                "내장 운영 키 지원 (키 설정 불필요)"
+            ],
+            "api_key_status": {
+                "builtin_key_available": key_status.get("builtin_key_configured", False),
+                "encryption_working": key_status.get("encryption_working", False),
+                "key_required": not key_status.get("builtin_key_configured", False),
+                "setup_info": "사용자 키 미제공시 내장 운영 키 자동 사용" if key_status.get("builtin_key_configured") else "API 키 설정 필요"
+            }
         }
 
 
