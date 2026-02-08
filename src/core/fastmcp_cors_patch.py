@@ -5,7 +5,7 @@ This module patches FastMCP to add proper CORS headers for browser-based MCP cli
 """
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger("naramarket.cors_patch")
 

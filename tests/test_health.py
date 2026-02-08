@@ -1,23 +1,29 @@
+"""Tests for health check functionality."""
+
 import os
-import sys
-import pathlib
+
+import pytest
+from fastapi.testclient import TestClient
 
 os.environ.setdefault("NARAMARKET_SERVICE_KEY", "DUMMY")
+os.environ.setdefault("JWT_SECRET_KEY", "test_secret_key_for_testing")
 
-# Add parent directory (where server.py resides) to path for import regardless of pytest CWD
-BASE_DIR = pathlib.Path(__file__).resolve().parents[1]
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
-
-import server  # type: ignore  # noqa: E402
+from src.api.app import create_app
 
 
-def test_health_structure():
-    # Access underlying function via .fn (FastMCP wrapper provides .fn attribute)
-    fn = getattr(server.healthcheck, "fn", None)
-    assert fn is not None, "healthcheck tool missing underlying function"
-    hc = fn()
-    assert isinstance(hc, dict)
-    assert "time" in hc
-    assert "env" in hc
-    assert "list_ping" in hc
+@pytest.fixture
+def client():
+    """Create test client."""
+    app = create_app()
+    return TestClient(app)
+
+
+def test_health_structure(client):
+    """Test that the health endpoint returns the expected structure."""
+    response = client.get("/api/v1/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, dict)
+    assert "status" in data
+    assert data["status"] == "healthy"
+    assert "timestamp" in data

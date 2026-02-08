@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from ..core.client import get_api_client
 from ..core.config import APP_NAME, SERVER_VERSION
-from ..core.utils import ensure_dir, now_ts
+from ..core.utils import now_ts
 
 
 class BaseTool:

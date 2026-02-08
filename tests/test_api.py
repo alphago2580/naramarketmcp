@@ -2,27 +2,25 @@
 
 import json
 import os
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
 # Mock environment variables before importing
 os.environ.setdefault("NARAMARKET_SERVICE_KEY", "test_service_key")
 os.environ.setdefault("JWT_SECRET_KEY", "test_secret_key_for_testing")
 
-from api.app import create_app
-from services.auth import auth_service
+from src.api.app import create_app
+from src.api.auth_routes import auth_router
+from src.services.auth import auth_service
 
 
 @pytest.fixture
 def app():
     """Create test FastAPI app."""
     app = create_app()
+    app.include_router(auth_router)
     app.debug = True
     return app
 

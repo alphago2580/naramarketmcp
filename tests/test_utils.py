@@ -1,16 +1,14 @@
 """Tests for utility functions."""
 
 import os
-import sys
 import tempfile
 from datetime import datetime, timedelta
 
 import pytest
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+os.environ.setdefault("NARAMARKET_SERVICE_KEY", "test_service_key")
 
-from core.utils import (
+from src.core.utils import (
     calculate_elapsed_time,
     date_range_days_back,
     ensure_dir,

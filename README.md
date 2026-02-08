@@ -297,32 +297,57 @@ LOG_LEVEL=INFO
 naramarketmcp/
 ├── src/
 │   ├── __init__.py
-│   ├── main.py              # FastMCP 서버 진입점
-│   ├── core/                # 핵심 모듈
+│   ├── main.py                    # FastMCP 서버 진입점
+│   ├── core/                      # 핵심 인프라 모듈
 │   │   ├── __init__.py
-│   │   ├── config.py        # 설정 관리
-│   │   └── models.py        # 데이터 모델
-│   ├── api/                 # API 클라이언트
+│   │   ├── config.py              # 설정 관리
+│   │   ├── models.py              # 데이터 모델
+│   │   ├── client.py              # API 클라이언트
+│   │   ├── async_client.py        # 비동기 API 클라이언트
+│   │   ├── enhanced_client.py     # 확장 API 클라이언트
+│   │   ├── utils.py               # 유틸리티 함수
+│   │   ├── cors_middleware.py     # CORS 미들웨어
+│   │   ├── smithery_middleware.py # Smithery 미들웨어
+│   │   └── fastmcp_cors_patch.py  # FastMCP CORS 패치
+│   ├── api/                       # HTTP/REST 인터페이스
 │   │   ├── __init__.py
-│   │   └── client.py        # API 호출 로직
-│   ├── services/            # 비즈니스 로직
+│   │   ├── app.py                 # FastAPI 앱
+│   │   ├── routes.py              # API 라우트
+│   │   └── auth_routes.py         # 인증 라우트
+│   ├── services/                  # 비즈니스 로직
 │   │   ├── __init__.py
-│   │   └── data_service.py  # 데이터 처리 서비스
-│   └── tools/               # MCP 도구
+│   │   ├── crawler.py             # 크롤러 서비스
+│   │   ├── async_crawler.py       # 비동기 크롤러
+│   │   ├── file_processor.py      # 파일 처리 서비스
+│   │   └── auth.py                # 인증 서비스
+│   └── tools/                     # MCP 도구
 │       ├── __init__.py
-│       ├── base.py          # 기본 도구 클래스
-│       ├── naramarket.py    # 나라장터 도구
-│       └── openapi_tools.py # G2B OpenAPI 도구
-├── tests/                   # 테스트 코드
-├── deployments/             # 배포 설정
-├── .env.example             # 환경변수 템플릿
+│       ├── base.py                # 기본 도구 클래스
+│       ├── naramarket.py          # 나라장터 도구
+│       ├── openapi_tools.py       # G2B OpenAPI 도구
+│       └── enhanced_tools.py      # 확장 도구
+├── tests/                         # 테스트 코드
+│   ├── test_api.py                # API 테스트
+│   ├── test_auth.py               # 인증 테스트
+│   ├── test_health.py             # 헬스체크 테스트
+│   └── test_utils.py              # 유틸리티 테스트
+├── deployments/                   # 배포 설정
+│   ├── deploy.sh                  # 배포 스크립트
+│   ├── docker-compose.yml         # Docker Compose 설정
+│   └── nginx/
+│       └── nginx.conf             # Nginx 설정
+├── docs/                          # 문서
+├── .env.example                   # 환경변수 템플릿
 ├── .gitignore
-├── Dockerfile               # 컨테이너 이미지
-├── deploy.sh                # 배포 스크립트
-├── pyproject.toml           # 프로젝트 설정
-├── requirements.txt         # 의존성
-├── smithery.yaml            # Smithery 배포 설정
-└── README.md                # 프로젝트 문서
+├── Dockerfile                     # 컨테이너 이미지
+├── deploy.sh                      # 배포 스크립트
+├── openapi.yaml                   # OpenAPI 스펙
+├── pyproject.toml                 # 프로젝트 설정
+├── pytest.ini                     # pytest 설정
+├── requirements.txt               # 의존성
+├── smithery.yaml                  # Smithery 배포 설정
+├── LICENSE                        # 라이선스
+└── README.md                      # 프로젝트 문서
 ```
 
 ## 🔧 문제 해결

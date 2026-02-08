@@ -1,11 +1,8 @@
 """Enhanced MCP tools for all Korean government procurement APIs (FastMCP 2.0)."""
 
 import logging
-import sys
 import json
-import os
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..core.enhanced_client import enhanced_api_client
 from ..core.config import SERVER_VERSION
@@ -29,9 +26,8 @@ class EnhancedProcurementTools(BaseTool):
     def _get_response_size(self, data: Any) -> int:
         """응답 데이터의 크기(문자 수)를 계산합니다."""
         try:
-            import json
             return len(json.dumps(data, ensure_ascii=False))
-        except:
+        except Exception:
             return len(str(data))
 
     def _extract_key_fields(self, item: Dict[str, Any], service_type: str) -> Dict[str, Any]:

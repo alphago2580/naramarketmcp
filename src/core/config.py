@@ -1,5 +1,6 @@
 """Configuration and constants for Naramarket FastMCP 2.0 Server."""
 
+import logging
 import os
 from typing import Dict, Any
 from dotenv import load_dotenv
@@ -60,9 +61,7 @@ INSTITUTION_DIVISION_CODES = {
 def parse_smithery_config() -> Dict[str, Any]:
     """Parse configuration from smithery.ai query parameters with error handling."""
     import urllib.parse
-    from typing import Any, Dict
-    import logging
-    
+
     logger = logging.getLogger(__name__)
     
     # Get query string from environment (smithery.ai passes this)
@@ -114,7 +113,6 @@ def parse_smithery_config() -> Dict[str, Any]:
 
 def get_service_key() -> str:
     """Get Naramarket service key from environment or smithery.ai config with secure handling."""
-    import logging
     
     logger = logging.getLogger(__name__)
     

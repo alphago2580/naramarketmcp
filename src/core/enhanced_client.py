@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 import requests
 

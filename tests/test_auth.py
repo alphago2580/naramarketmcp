@@ -1,19 +1,15 @@
 """Tests for authentication service."""
 
 import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Mock environment variables
 os.environ.setdefault("NARAMARKET_SERVICE_KEY", "test_service_key")
 os.environ.setdefault("JWT_SECRET_KEY", "test_secret_key_for_testing")
 
-from services.auth import AuthService
+from src.services.auth import AuthService
 
 
 @pytest.fixture

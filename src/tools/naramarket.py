@@ -1,16 +1,14 @@
 """Naramarket MCP tools for data crawling and processing (FastMCP 2.0)."""
 
-import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from ..core.client import get_api_client
 from ..core.config import (
     APP_NAME,
-    CATEGORIES, 
+    CATEGORIES,
     DEFAULT_DELAY_SEC,
-    DEFAULT_MAX_PAGES,
     DEFAULT_NUM_ROWS,
     SERVER_VERSION
 )

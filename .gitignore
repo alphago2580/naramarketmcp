@@ -11,6 +11,7 @@ __pycache__/
 # Local env files
 .env
 .env.*
+!.env.example
 
 # Build / dist
 build/

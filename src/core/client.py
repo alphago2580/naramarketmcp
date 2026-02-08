@@ -4,7 +4,7 @@ import json
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 import requests
 
@@ -103,8 +103,8 @@ class NaramarketAPIClient:
         category: str,
         page_no: int = 1,
         num_rows: int = 100,
-        inqry_bgn_date: str = None,
-        inqry_end_date: str = None
+        inqry_bgn_date: Optional[str] = None,
+        inqry_end_date: Optional[str] = None
     ) -> Dict[str, Any]:
         """Fetch product list for a category."""
         params = {
@@ -212,6 +212,6 @@ def get_api_client() -> NaramarketAPIClient:
     return _api_client
 
 # For backward compatibility
-def api_client():
+def api_client() -> NaramarketAPIClient:
     """Backward compatible property access."""
     return get_api_client()

@@ -1,7 +1,7 @@
 """CORS middleware for MCP server Smithery.ai deployment."""
 
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List
 
 try:
     from starlette.middleware.base import BaseHTTPMiddleware

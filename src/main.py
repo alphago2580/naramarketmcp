@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from fastmcp import FastMCP
@@ -17,8 +17,6 @@ from .core.models import (
 )
 from .tools.naramarket import naramarket_tools
 from .tools.enhanced_tools import enhanced_tools
-from .core.cors_middleware import apply_cors_to_fastmcp
-from .core.fastmcp_cors_patch import patch_fastmcp_for_smithery, apply_fastmcp_cors_patch
 
 
 # Initialize logging
@@ -28,23 +26,6 @@ logger = logging.getLogger("naramarket")
 # Initialize FastMCP 2.0 with CORS configuration for Smithery.ai
 try:
     mcp = FastMCP(APP_NAME)
-
-    # Configure CORS for Smithery.ai deployment
-    # This ensures proper browser access to MCP endpoints
-    cors_config = {
-        "allow_origins": ["*"],  # Allow all origins for Smithery.ai
-        "allow_credentials": True,  # Allow credentials
-        "allow_methods": ["GET", "POST", "OPTIONS"],  # Required HTTP methods
-        "allow_headers": ["*", "Content-Type", "Authorization"],  # All headers including custom ones
-        "expose_headers": ["mcp-session-id", "mcp-protocol-version"]  # MCP-specific headers
-    }
-
-    # Note: CORS configuration for Smithery.ai
-    # FastMCP 2.0 has built-in CORS support that should handle browser requests
-    # Additional CORS headers will be managed by Smithery.ai infrastructure
-    logger.info("✅ CORS configuration ready for Smithery.ai deployment")
-    logger.info("   - FastMCP 2.0 built-in CORS support enabled")
-    logger.info("   - Smithery.ai infrastructure will handle additional CORS requirements")
 
     logger.info(f"FastMCP 2.0 initialized: {APP_NAME}")
 except Exception as e:
