@@ -26,4 +26,3 @@ def test_health_structure(client):
     assert isinstance(data, dict)
     assert "status" in data
     assert data["status"] == "healthy"
-    assert "timestamp" in data

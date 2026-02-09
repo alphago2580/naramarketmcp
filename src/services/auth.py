@@ -186,7 +186,7 @@ class AuthService:
         except jwt.ExpiredSignatureError:
             self.revoke_token(token)
             return None
-        except jwt.JWTError:
+        except jwt.PyJWTError:
             return None
     
     def revoke_token(self, token: str) -> bool:
@@ -232,7 +232,7 @@ class AuthService:
         try:
             payload = jwt.decode(code, self.secret_key, algorithms=[self.algorithm])
             return payload
-        except jwt.JWTError:
+        except jwt.PyJWTError:
             return None
     
     def get_user_scopes(self, username: str) -> list:

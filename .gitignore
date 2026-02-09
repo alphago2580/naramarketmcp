@@ -34,7 +34,19 @@ dist/
 # Backup files
 backup/
 
-# ai agents contexts
+# AI agent contexts
 gemini.md
 claude.md
+CLAUDE.md
+GEMINI.md
+
+# pytest cache
+.pytest_cache/
+
+# egg-info
+*.egg-info/
+
+# docs build artifacts
+docs/.bkit-memory.json
+docs/.pdca-status.json
 

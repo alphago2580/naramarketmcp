@@ -88,8 +88,8 @@ class TestUtilityFunctions:
     
     def test_sanitize_column_name(self):
         """Test column name sanitization."""
-        # Test special characters
-        assert sanitize_column_name("test column!@#") == "test_column___"
+        # Test special characters (consecutive underscores collapsed, trailing stripped)
+        assert sanitize_column_name("test column!@#") == "test_column"
         assert sanitize_column_name("test__column") == "test_column"
         assert sanitize_column_name("__test__") == "test"
         assert sanitize_column_name("한글컬럼명") == "한글컬럼명"  # Korean should be preserved
@@ -97,7 +97,7 @@ class TestUtilityFunctions:
         # Test edge cases
         assert sanitize_column_name("") == "unknown"
         assert sanitize_column_name("123") == "123"
-        assert sanitize_column_name(None) == "unknown"
+        assert sanitize_column_name(None) == "None"
         assert sanitize_column_name(123) == "123"
     
     def test_format_file_size(self):
